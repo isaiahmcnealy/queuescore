@@ -21,6 +21,9 @@ Runs immediately — **no network, no API key**. The app scores baked-in demo
 projects with `DummyScorer` and gates all Anthropic calls behind
 `config.DRY_RUN` (defaults on).
 
+Full setup (env vars, offline cache, training data, teammate onboarding):
+[SETUP.md](SETUP.md).
+
 Run the tests:
 
 ```bash
