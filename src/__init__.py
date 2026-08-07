@@ -1,0 +1,1 @@
+"""QueueScore source package."""

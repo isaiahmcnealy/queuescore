@@ -1,0 +1,25 @@
+# Data files (raw LBNL xlsx + queue snapshots are not versioned)
+data/raw/*.xlsx
+data/raw/*.xls
+data/raw/*.csv
+data/snapshots/*.parquet
+data/snapshots/*.csv
+
+# Secrets
+.env
+
+# IDE
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Keep the directory placeholders
+!data/raw/.gitkeep
+!data/snapshots/.gitkeep
