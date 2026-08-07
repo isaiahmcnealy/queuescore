@@ -22,7 +22,8 @@ projects with `DummyScorer` and gates all Anthropic calls behind
 `config.DRY_RUN` (defaults on).
 
 Full setup (env vars, offline cache, training data, teammate onboarding):
-[SETUP.md](SETUP.md).
+[SETUP.md](SETUP.md). Dataset shapes, the LBNL codebook, and the source→model
+column mapping: [DATA.md](DATA.md).
 
 Run the tests:
 

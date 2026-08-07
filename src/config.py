@@ -70,18 +70,19 @@ GRIDSTATUS_TO_MODEL: dict[str, str] = {
 }
 
 # LBNL "Queued Up" historical dataset -> internal schema.
-# TODO(day-of): fill keys once the codebook is open. LBNL column headers vary
-# by release year; do not guess them. Values (RHS) are stable — only the raw
-# LBNL header strings on the LHS are unknown.
+# Resolved from the 2026 Data File codebook (sheet "04. Data Codebook"); see
+# DATA.md. Read sheet "03. Complete Queue Data" with header=1 (row 0 is a
+# banner). Note: q_id is unique only combined with `entity`, and `generation_type`
+# comes from `type_1` (verbose live-ERCOT types must be normalized to match).
 LBNL_TO_MODEL: dict[str, str] = {
-    "TODO_lbnl_queue_id_col": "queue_id",
-    "TODO_lbnl_capacity_mw_col": "capacity_mw",
-    "TODO_lbnl_queue_date_col": "queue_date",
-    "TODO_lbnl_county_col": "county",
-    "TODO_lbnl_state_col": "state",
-    "TODO_lbnl_generation_type_col": "generation_type",
-    "TODO_lbnl_proposed_cod_col": "proposed_completion_date",
-    "TODO_lbnl_status_col": "status",
+    "q_id": "queue_id",
+    "mw_1": "capacity_mw",
+    "q_date": "queue_date",
+    "county": "county",
+    "state": "state",
+    "type_1": "generation_type",
+    "prop_date": "proposed_completion_date",
+    "q_status": "status",
 }
 
 # --------------------------------------------------------------------------- #
