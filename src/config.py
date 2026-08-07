@@ -18,6 +18,15 @@ from pathlib import Path
 # --------------------------------------------------------------------------- #
 PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent
 DATA_DIR: Path = PROJECT_ROOT / "data"
+
+# Load a local .env (gitignored) so ANTHROPIC_API_KEY is picked up automatically.
+# Optional: if python-dotenv isn't installed or there's no .env, this is a no-op.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(PROJECT_ROOT / ".env")
+except ImportError:
+    pass
 RAW_DIR: Path = DATA_DIR / "raw"
 SNAPSHOT_DIR: Path = DATA_DIR / "snapshots"
 

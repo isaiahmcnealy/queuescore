@@ -83,13 +83,20 @@ def _county_map_stub(scored: pd.DataFrame) -> go.Figure:
     """Plotly Texas county map STUB.
 
     Day-of: swap for a real county-level choropleth keyed on Texas FIPS codes.
-    Today it plots projects at jittered placeholder coordinates so the panel is
-    live and wired to the scored frame.
+    Today it scatters the demo projects in a small cluster around Houston so the
+    panel is live and wired to the scored frame.
     """
+    # Houston (Harris County). Demo points fan out in a small deterministic
+    # cluster around it — placeholder geography until real FIPS coords land.
+    houston_lon, houston_lat = -95.37, 29.76
+    n = len(scored)
+    lon = [houston_lon + (i - (n - 1) / 2) * 0.18 for i in range(n)]
+    lat = [houston_lat + (0.12 if i % 2 else -0.12) * (1 + i // 2) for i in range(n)]
+
     fig = go.Figure(
         go.Scattergeo(
-            lon=[-99 - i * 0.4 for i in range(len(scored))],
-            lat=[31 + i * 0.3 for i in range(len(scored))],
+            lon=lon,
+            lat=lat,
             text=scored["queue_id"] + " · " + (scored["completion_probability"] * 100).round().astype(int).astype(str) + "%",
             marker=dict(
                 size=(scored["capacity_mw"] / 10).clip(6, 40),
@@ -102,12 +109,10 @@ def _county_map_stub(scored: pd.DataFrame) -> go.Figure:
             mode="markers",
         )
     )
-    fig.update_geos(scope="usa", center=dict(lon=-99, lat=31), projection_scale=4)
-    fig.update_layout(
-        margin=dict(l=0, r=0, t=10, b=0),
-        height=360,
-        title="Texas county map (STUB — placeholder coordinates)",
-    )
+    fig.update_geos(scope="usa", center=dict(lon=houston_lon, lat=houston_lat), projection_scale=9)
+    # No in-figure title — the caption lives in the Streamlit layout (see main)
+    # so it can't be clipped by the chart container.
+    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=360)
     return fig
 
 
@@ -143,6 +148,7 @@ def main() -> None:
 
         # Panel 3: county map
         st.subheader("Geography")
+        st.caption("Houston-area projects (STUB — placeholder coordinates)")
         st.plotly_chart(_county_map_stub(scored), use_container_width=True)
 
     # Panel 4: project detail + Q&A

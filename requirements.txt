@@ -8,4 +8,5 @@ pandas
 pyarrow
 openpyxl
 anthropic
+python-dotenv
 pytest

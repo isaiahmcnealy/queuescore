@@ -23,3 +23,6 @@ venv/
 # Keep the directory placeholders
 !data/raw/.gitkeep
 !data/snapshots/.gitkeep
+
+# app control
+.app.pid
