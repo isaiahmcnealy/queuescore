@@ -23,7 +23,7 @@ projects with `DummyScorer` and gates all Anthropic calls behind
 
 Full setup (env vars, offline cache, training data, teammate onboarding):
 [SETUP.md](SETUP.md). Dataset shapes, the LBNL codebook, and the source→model
-column mapping: [DATA.md](DATA.md).
+column mapping: [DATA.md](DATA.md). Production (arya / Cloudflare): [DEPLOY.md](DEPLOY.md).
 
 Run the tests:
 
@@ -87,16 +87,15 @@ class ScoreResult:
 
 ```
 queuescore/
-├── src/
-│   ├── config.py     constants, column mappings, target, flags
-│   ├── ingest.py     load_lbnl (stub) + fetch_ercot_queue (real offline cache)
-│   ├── features.py   build_features (stub) + FeatureSchema + leakage guard
-│   ├── scorer.py     Scorer contract + Dummy/Baseline (wired) + XGB (skeleton)
-│   ├── explain.py    Claude verdict + Q&A, gated by DRY_RUN
-│   └── app.py        Streamlit: pull · leaderboard · map · detail
-├── tests/test_contract.py
+├── src/                 app + scoring pipeline
+├── tests/
+├── deploy/              systemd unit for arya
+├── scripts/             run_prod, restart, setup_runner
+├── .github/workflows/   ci.yml (ubuntu) + deploy.yml (self-hosted)
 └── data/{raw,snapshots}/
 ```
+
+Production hosting (arya, Cloudflare Tunnel, deploy-on-push): [DEPLOY.md](DEPLOY.md).
 
 ## What is real vs. stubbed today
 
