@@ -1,0 +1,11 @@
+# QueueScore theme — warm cream + sage/olive greens, terracotta accent.
+# Source: Warm Cream #F7F4EB · Sage #96A18C · Deep Olive #4A533C ·
+#         Charcoal Forest #2E332A · Soft Terracotta #C88E72
+# Palette is mirrored in src/app.py (PALETTE) so Python-drawn charts match.
+[theme]
+base = "light"
+primaryColor = "#4A533C"            # deep olive — buttons, accents, progress bars
+backgroundColor = "#F7F4EB"         # warm cream
+secondaryBackgroundColor = "#E7EBE1" # pale sage — cards, table headers, inputs
+textColor = "#2E332A"               # charcoal forest
+font = "sans serif"

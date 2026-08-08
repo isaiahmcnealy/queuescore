@@ -1,0 +1,29 @@
+name: CI
+
+# Fast guard for parallel hackathon work: does the contract still hold and does
+# the app still import? Runs on every push and PR. No deploy — that's manual.
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"   # pinned to match local dev (see .venv / SETUP.md)
+          cache: pip
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Run contract tests
+        run: pytest -q
+
+      - name: Smoke-check the app imports
+        # Catches a broken import / syntax error in app.py before the demo does.
+        run: python -c "import sys; sys.path.insert(0, '.'); import src.app; print('app imports OK')"
