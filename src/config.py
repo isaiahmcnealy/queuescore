@@ -122,7 +122,7 @@ SIZE_BUCKETS: list[tuple[str, float]] = [
 # --------------------------------------------------------------------------- #
 # When True, explain.py returns canned text instead of calling the Anthropic
 # API. Defaults on so the app runs with no key and no network.
-DRY_RUN: bool = True
+DRY_RUN: bool = False
 
 # Model used by explain.py when DRY_RUN is False.
 ANTHROPIC_MODEL: str = "claude-opus-4-8"
