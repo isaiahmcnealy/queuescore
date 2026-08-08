@@ -45,7 +45,7 @@ QA_USER_TEMPLATE: str = (
 )
 
 RECORD_VERDICT_SYSTEM_PROMPT: str = (
-    "You are Project Radar, an origination analyst for Texas power projects. "
+    "You are QueueScore, an origination analyst for Texas power projects. "
     "Given one record from a public source (ERCOT interconnection queue or a "
     "TCEQ air permit), explain in two or three sentences what it signals about "
     "the project's momentum and whether it's worth a business-development "
@@ -58,6 +58,23 @@ RECORD_VERDICT_TEMPLATE: str = (
     "Status: {status}\nStage signal: {stage_signal}\n"
     "Capacity (MW): {capacity_mw}\nRecord date: {record_date}\n\n"
     "What does this record signal for deal origination?"
+)
+
+RECORD_QA_SYSTEM_PROMPT: str = (
+    "You are QueueScore, an origination analyst for Texas power projects. "
+    "Answer the user's question using the selected public record as primary "
+    "context. Be concrete. If the record does not support an answer, say so."
+)
+
+RECORD_QA_USER_TEMPLATE: str = (
+    "Selected record (primary context):\n"
+    "Source: {source}\nRecord ID: {source_id}\nProject: {project_name}\n"
+    "Company: {company}\nCounty: {county}\nType: {kind}\n"
+    "Status: {status}\nStage signal: {stage_signal}\n"
+    "Capacity (MW): {capacity_mw}\nRecord date: {record_date}\n"
+    "Link / ref: {link_id}\n"
+    "Coordinates: lat={lat}, lon={lon}\n\n"
+    "Question: {question}"
 )
 
 _CANNED_RECORD_VERDICT: str = (
@@ -76,6 +93,10 @@ _CANNED_VERDICT: str = (
 _CANNED_ANSWER: str = (
     "[DRY_RUN] Placeholder answer. With DRY_RUN off, this returns a real, "
     "data-grounded response from Claude over the scored leaderboard."
+)
+_CANNED_RECORD_ANSWER: str = (
+    "[DRY_RUN] Placeholder answer about the selected record. Set DRY_RUN=False "
+    "and ANTHROPIC_API_KEY for a real Claude response using this record as context."
 )
 
 
@@ -117,6 +138,20 @@ def explain_record(record: dict) -> str:
         )}
     )
     return _call_claude(RECORD_VERDICT_SYSTEM_PROMPT, prompt)
+
+
+def answer_record_question(question: str, record: dict) -> str:
+    """Answer a free-form question with one selected record as Anthropic context."""
+    if config.DRY_RUN:
+        return _CANNED_RECORD_ANSWER
+    keys = (
+        "source", "source_id", "project_name", "company", "county",
+        "kind", "status", "stage_signal", "capacity_mw", "record_date",
+        "link_id", "lat", "lon",
+    )
+    fields = {k: record.get(k, "?") for k in keys}
+    prompt = RECORD_QA_USER_TEMPLATE.format(question=question, **fields)
+    return _call_claude(RECORD_QA_SYSTEM_PROMPT, prompt)
 
 
 def answer_question(question: str, scored: pd.DataFrame) -> str:

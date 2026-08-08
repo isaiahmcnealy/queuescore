@@ -19,7 +19,7 @@ streamlit run src/app.py
 
 Runs immediately — **no network, no API key**. The app scores baked-in demo
 projects with `DummyScorer` and gates all Anthropic calls behind
-`config.DRY_RUN` (defaults on).
+`DRY_RUN` in `.env` (defaults to true if unset).
 
 Full setup (env vars, offline cache, training data, teammate onboarding):
 [SETUP.md](SETUP.md). Dataset shapes, the LBNL codebook, and the source→model

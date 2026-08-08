@@ -24,7 +24,7 @@ pytest        # expect: 8 passed
 
 ## Optional: live explanations (day-of)
 
-The app only needs a key when you flip `DRY_RUN = False` in `src/config.py`.
+The app only needs a key when `DRY_RUN=false` in `.env`.
 
 ```bash
 cp .env.example .env      # then paste your real ANTHROPIC_API_KEY
