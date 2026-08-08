@@ -92,7 +92,7 @@ def _inject_css() -> None:
 
 def _schema_help() -> None:
     """ℹ️ popover: what a row is, where fields come from, and the stage ladder."""
-    with st.popover("ℹ️ About this data", use_container_width=False):
+    with st.popover("ℹ️", help="About this data", use_container_width=False):
         st.markdown(
             """
 **One row = one public filing, not one project.** The same project can appear
