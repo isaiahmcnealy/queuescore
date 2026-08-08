@@ -11,6 +11,7 @@ Day-of TODO: fill the LBNL mapping values once the "Queued Up" codebook is open
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 # --------------------------------------------------------------------------- #
@@ -121,8 +122,15 @@ SIZE_BUCKETS: list[tuple[str, float]] = [
 # Runtime flags
 # --------------------------------------------------------------------------- #
 # When True, explain.py returns canned text instead of calling the Anthropic
-# API. Defaults on so the app runs with no key and no network.
-DRY_RUN: bool = False
+# API. Set in `.env` as DRY_RUN=true|false (default true — no key/network needed).
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+DRY_RUN: bool = _env_bool("DRY_RUN", True)
 
 # Model used by explain.py when DRY_RUN is False.
 ANTHROPIC_MODEL: str = "claude-opus-4-8"

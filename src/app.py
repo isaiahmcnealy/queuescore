@@ -236,31 +236,33 @@ def main() -> None:
         view = view[mask]
     view = view.reset_index(drop=True)
 
-    # Shared focus record for the geography panels + detail pane.
+    # Shared focus: table click and the searchable selectbox both write record_pick.
     labels = view.apply(_label, axis=1).tolist() if len(view) else []
-    pick = st.session_state.get("record_pick")
-    if pick not in labels:
-        pick = labels[0] if labels else None
-    focus = view.iloc[labels.index(pick)] if pick else None
+    if labels and st.session_state.get("record_pick") not in labels:
+        st.session_state.record_pick = labels[0]
 
     left, right = st.columns([3, 2])
 
-    # Panel 2: records table
+    # Panel 2: records table (click a row to select)
     with left:
         with st.container(border=True):
             st.subheader("Records")
             st.caption(
-                f"{len(view):,} shown — one row per source filing; the same project "
-                "can appear in both sources until matching links them (next step)."
+                f"{len(view):,} shown — click a row to select it (updates the detail pane). "
+                "Same project can appear in both sources until matching links them."
             )
-            st.dataframe(
-                view[
-                    ["source", "source_id", "project_name", "company", "county",
-                     "kind", "status", "capacity_mw", "record_date"]
-                ],
+            table = view[
+                ["source", "source_id", "project_name", "company", "county",
+                 "kind", "status", "capacity_mw", "record_date"]
+            ]
+            event = st.dataframe(
+                table,
                 width="stretch",
                 hide_index=True,
                 height=330,
+                on_select="rerun",
+                selection_mode="single-row",
+                key="records_table",
                 column_config={
                     "source": st.column_config.TextColumn("Src"),
                     "source_id": st.column_config.TextColumn("ID"),
@@ -273,8 +275,21 @@ def main() -> None:
                     "record_date": st.column_config.DateColumn("Filed"),
                 },
             )
+            selected_rows = event.selection.rows if event and event.selection else []
+            if selected_rows:
+                idx = int(selected_rows[0])
+                # Only apply when the clicked row *changes* — otherwise a sticky
+                # table selection would overwrite the searchable selectbox on every rerun.
+                if (
+                    0 <= idx < len(labels)
+                    and st.session_state.get("_last_table_sel") != idx
+                ):
+                    st.session_state._last_table_sel = idx
+                    st.session_state.record_pick = labels[idx]
 
-        # Panel 3: geography
+        pick = st.session_state.get("record_pick")
+        focus = view.iloc[labels.index(pick)] if pick in labels else None
+
         with st.container(border=True):
             geo_head, geo_toggle = st.columns([1, 1])
             geo_head.subheader("Geography")
@@ -301,8 +316,22 @@ def main() -> None:
             if not labels:
                 st.info("No records match the current filters.")
             else:
-                st.selectbox("Record", labels, key="record_pick")
-                row = focus
+                # No widget key on selectbox — index= tracks record_pick so table
+                # clicks can move the dropdown. Type in the box to search/filter.
+                prev_pick = st.session_state.record_pick
+                idx = labels.index(prev_pick) if prev_pick in labels else 0
+                choice = st.selectbox(
+                    "Record",
+                    labels,
+                    index=idx,
+                    help="Click a table row or type here to search records.",
+                )
+                st.session_state.record_pick = choice
+                if choice != prev_pick:
+                    # Selectbox drove the change; clear sticky table idx so the
+                    # next row click is applied even if it's the previously highlighted row.
+                    st.session_state._last_table_sel = None
+                row = view.iloc[labels.index(choice)]
                 st.metric("Status", row["status"] or "—")
                 cap = f"{row['capacity_mw']:.0f} MW · " if pd.notna(row["capacity_mw"]) else ""
                 filed = (
@@ -320,12 +349,15 @@ def main() -> None:
                 st.write("**Origination read**")
                 _render_verdict(explain.explain_record(row.to_dict()))
 
-                st.write("**Ask about the data**")
+                st.write("**Ask about this record**")
                 question = st.text_input(
-                    "e.g. Which counties have new gas-plant permit applications?"
+                    "Question",
+                    placeholder="e.g. Is this far enough along for an EPC conversation?",
+                    label_visibility="collapsed",
                 )
                 if question:
-                    st.write(explain.answer_question(question, view.drop(columns=["county_key"])))
+                    with st.spinner("Asking Claude…"):
+                        st.write(explain.answer_record_question(question, row.to_dict()))
 
     st.divider()
     st.caption(
