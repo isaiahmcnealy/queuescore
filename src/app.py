@@ -140,6 +140,61 @@ _CSS = f"""
   .qs-pill-link {{
     background: rgba(200, 142, 114, 0.16); border-color: rgba(200, 142, 114, 0.35);
   }}
+  .qs-pill-link-on {{
+    background: rgba(200, 142, 114, 0.32); border-color: rgba(200, 142, 114, 0.55);
+  }}
+  /* Hero "N stitched" control — looks like a pill, toggles the stitched lens */
+  div[data-testid="stElementContainer"]:has(.qs-stitched-btn)
+    [data-testid="stButton"] > button {{
+    border-radius: 999px !important;
+    padding: 0.38rem 0.75rem !important;
+    background: rgba(200, 142, 114, 0.16) !important;
+    border: 1px solid rgba(200, 142, 114, 0.35) !important;
+    color: {PALETTE['ink']} !important;
+    font-size: 0.86rem !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-stitched-btn)
+    [data-testid="stButton"] > button:hover {{
+    background: rgba(200, 142, 114, 0.28) !important;
+    color: {PALETTE['ink']} !important;
+    border-color: rgba(200, 142, 114, 0.5) !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-stitched-btn.on)
+    [data-testid="stButton"] > button {{
+    background: rgba(200, 142, 114, 0.36) !important;
+    border-color: rgba(200, 142, 114, 0.6) !important;
+    box-shadow: inset 0 0 0 1px rgba(200, 142, 114, 0.35) !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-stitched-btn)
+    [data-testid="stButton"] > button:disabled {{
+    opacity: 0.45;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-refresh-btn)
+    [data-testid="stButton"] > button {{
+    border-radius: 999px !important;
+    padding: 0.38rem 0.75rem !important;
+    background: rgba(231, 235, 225, 0.95) !important;
+    border: 1px solid rgba(74, 83, 60, 0.12) !important;
+    color: {PALETTE['ink']} !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    white-space: nowrap !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-refresh-btn)
+    [data-testid="stButton"] > button:hover {{
+    background: rgba(74, 83, 60, 0.12) !important;
+    color: {PALETTE['ink']} !important;
+    border-color: rgba(74, 83, 60, 0.28) !important;
+  }}
+  .qs-hero-pills-row {{
+    display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center;
+    justify-content: flex-end;
+  }}
   .qs-link-card {{
     margin: 0.35rem 0; padding: 0.85rem 0.95rem;
     border-radius: 14px; border: 1px solid rgba(200, 142, 114, 0.35);
@@ -282,32 +337,92 @@ _CSS = f"""
     font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em;
     text-transform: uppercase; color: rgba(46, 51, 42, 0.55); margin: 0;
   }}
-  /* Filings expander — chevron dropdown instead of a toggle */
-  div[data-testid="stExpander"] {{
+  /* Filings header row — chevron label + info on one line */
+  div[data-testid="stHorizontalBlock"]:has(.qs-filings-marker) {{
     margin-top: 0.45rem;
-    border: none !important;
-    border-top: 1px solid rgba(46, 51, 42, 0.08) !important;
-    border-radius: 0 !important;
-    background: transparent !important;
+    padding-top: 0.55rem;
+    border-top: 1px solid rgba(46, 51, 42, 0.08);
+    align-items: center;
   }}
-  div[data-testid="stExpander"] details {{ border: none !important; }}
-  div[data-testid="stExpander"] summary {{
-    padding: 0.55rem 0.15rem !important;
+  div[data-testid="stElementContainer"]:has(.qs-filings-marker) {{
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-filings-marker)
+    + div[data-testid="stElementContainer"]
+    [data-testid="stButton"] > button {{
+    background: transparent !important;
+    border: none !important;
+    color: rgba(46, 51, 42, 0.55) !important;
     font-size: 0.8rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.04em !important;
     text-transform: uppercase !important;
-    color: rgba(46, 51, 42, 0.55) !important;
+    padding: 0.2rem 0.15rem !important;
+    box-shadow: none !important;
+    transform: none !important;
   }}
-  div[data-testid="stExpander"] summary:hover {{
+  div[data-testid="stElementContainer"]:has(.qs-filings-marker)
+    + div[data-testid="stElementContainer"]
+    [data-testid="stButton"] > button:hover {{
     color: {PALETTE['ink']} !important;
+    background: transparent !important;
   }}
-  div[data-testid="stExpander"] summary svg {{
-    stroke: {PALETTE['olive']} !important;
+  div[data-testid="stElementContainer"]:has(.qs-filings-marker)
+    + div[data-testid="stElementContainer"]
+    [data-testid="stButton"] > button svg {{
+    fill: {PALETTE['olive']} !important;
+  }}
+  /* Overlay "Reset search" on the bottom-left of the map */
+  div[data-testid="stElementContainer"]:has(.qs-map-reset) {{
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-map-reset)
+    + div[data-testid="stElementContainer"] {{
+    margin-top: -3.15rem !important;
+    margin-bottom: 2.4rem !important;
+    margin-left: 0.65rem !important;
+    position: relative;
+    z-index: 30;
+    width: fit-content !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-map-reset)
+    + div[data-testid="stElementContainer"] [data-testid="stButton"] > button {{
+    background: rgba(247, 244, 235, 0.94) !important;
+    border: 1px solid rgba(74, 83, 60, 0.28) !important;
+    color: {PALETTE['olive']} !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    padding: 0.28rem 0.75rem !important;
+    box-shadow: 0 1px 4px rgba(46, 51, 42, 0.12);
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-map-reset)
+    + div[data-testid="stElementContainer"] [data-testid="stButton"] > button:hover {{
+    background: {PALETTE['olive']} !important;
+    color: {PALETTE['bg']} !important;
   }}
 
   [data-testid="stPopover"] {{ display: flex; justify-content: flex-end; }}
-  [data-testid="stPopover"] > button {{ padding: 0.15rem 0.55rem; }}
+  [data-testid="stPopover"] > button {{
+    padding: 0.2rem 0.45rem !important;
+    min-height: 1.85rem !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(74, 83, 60, 0.28) !important;
+    color: {PALETTE['olive']} !important;
+    background: rgba(231, 235, 225, 0.7) !important;
+  }}
+  [data-testid="stPopover"] > button:hover {{
+    background: {PALETTE['olive']} !important;
+    color: {PALETTE['bg']} !important;
+    border-color: {PALETTE['olive']} !important;
+  }}
+  [data-testid="stPopover"] > button svg {{
+    fill: currentColor !important;
+  }}
   [data-testid="stToolbar"], #MainMenu, footer,
   header[data-testid="stHeader"] {{ visibility: hidden; height: 0; }}
   div[data-testid="stDecoration"] {{ display: none; }}
@@ -329,33 +444,78 @@ def _inject_css() -> None:
     st.markdown(_CSS, unsafe_allow_html=True)
 
 
-def _hero(n_records: int, n_links: int, stamps: str) -> None:
-    """Brand + live pulse strip — one composition above the map."""
-    st.markdown(
-        f"""
-        <div class="qs-hero">
-          <div>
-            <p class="qs-brand">QueueScore</p>
-            <p class="qs-tagline">
-              Live Texas power origination — ERCOT queue + TCEQ permits,
-              stitched when we can prove it's the same project.
-            </p>
-          </div>
-          <div class="qs-pills">
-            <span class="qs-pill qs-pill-live"><span class="qs-dot"></span> Live</span>
-            <span class="qs-pill"><strong>{n_records:,}</strong> filings</span>
-            <span class="qs-pill qs-pill-link"><strong>{n_links}</strong> stitched</span>
-            <span class="qs-pill">{stamps}</span>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+def _hero(n_records: int, n_links: int, stamps: str) -> bool:
+    """Brand + live pulse strip. Returns whether the stitched lens is on.
+
+    Clicking the stitched pill toggles ``st.session_state.stitched_only``.
+    Clicking the freshness stamp pill queues a live data refresh.
+    """
+    stitched_on = bool(st.session_state.get("stitched_only", False))
+    if n_links == 0:
+        stitched_on = False
+        st.session_state.stitched_only = False
+
+    brand, pills = st.columns([1.35, 1], vertical_alignment="bottom")
+    with brand:
+        st.markdown(
+            (
+                '<div class="qs-hero" style="margin:0;">'
+                '<div>'
+                '<p class="qs-brand">QueueScore</p>'
+                '<p class="qs-tagline">'
+                "Live Texas power origination — ERCOT queue + TCEQ permits, "
+                "stitched when we can prove it's the same project."
+                "</p></div></div>"
+            ),
+            unsafe_allow_html=True,
+        )
+    with pills:
+        p1, p2, p3, p4 = st.columns([0.85, 1.15, 1.15, 2.4], vertical_alignment="center")
+        p1.markdown(
+            '<span class="qs-pill qs-pill-live"><span class="qs-dot"></span> Live</span>',
+            unsafe_allow_html=True,
+        )
+        p2.markdown(
+            f'<span class="qs-pill"><strong>{n_records:,}</strong> filings</span>',
+            unsafe_allow_html=True,
+        )
+        with p3:
+            on_cls = " on" if stitched_on else ""
+            st.markdown(
+                f'<div class="qs-stitched-btn{on_cls}"></div>',
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                f"{n_links} stitched",
+                key="btn_stitched_lens",
+                disabled=n_links == 0,
+                help="Show only filings linked across ERCOT ↔ TCEQ. Click again to clear.",
+            ):
+                st.session_state.stitched_only = not stitched_on
+                st.rerun()
+        with p4:
+            st.markdown('<div class="qs-refresh-btn"></div>', unsafe_allow_html=True)
+            if st.button(
+                stamps,
+                key="btn_refresh_stamps",
+                icon=":material/refresh:",
+                help="Pull fresh ERCOT + TCEQ data. Shows last-updated times.",
+            ):
+                st.session_state._do_refresh = True
+                st.rerun()
+
+    return bool(st.session_state.get("stitched_only", False))
 
 
 def _schema_help() -> None:
-    """ℹ️ popover: what a row is, where fields come from, and the stage ladder."""
-    with st.popover("ℹ️", help="About this data", use_container_width=False):
+    """Info popover: what a row is, where fields come from, and the stage ladder."""
+    with st.popover(
+        "",
+        icon=":material/info:",
+        help="About this data",
+        use_container_width=False,
+        type="tertiary",
+    ):
         st.markdown(
             """
 **One row = one public filing, not one project.** The same project can appear
@@ -842,8 +1002,8 @@ def main() -> None:
     st.set_page_config(page_title="QueueScore", page_icon="📡", layout="wide")
     _inject_css()
 
-    # Panel 1: refresh + load
-    refresh = st.button("Refresh data", type="secondary")
+    # Panel 1: load (refresh is the hero timestamp pill)
+    refresh = bool(st.session_state.pop("_do_refresh", False))
     records, fresh = _load_records(refresh=refresh)
 
     # Cross-source matching: link ERCOT queue entries to their TCEQ permits
@@ -866,14 +1026,14 @@ def main() -> None:
         f"{name.upper()} {ts:%b %d %H:%M}" if ts else f"{name.upper()} never"
         for name, ts in fresh.items()
     )
-    _hero(len(records), n_links, html.escape(stamps))
+    stitched_only = _hero(len(records), n_links, html.escape(stamps))
 
-    # Filters — status multiselect: empty = all; stitched lens = matched only.
+    # Filters — status multiselect: empty = all.
     statuses_present = set(records["status"].dropna().astype(str))
     status_options = [s for s in STATUS_COLORS if s in statuses_present] + sorted(
         statuses_present - set(STATUS_COLORS)
     )
-    fcol1, fcol2, fcol3, fcol4, fcol5 = st.columns([2.2, 1.5, 1.1, 1.0, 1.1])
+    fcol1, fcol2, fcol3, fcol4 = st.columns([2.4, 1.6, 1.2, 1.4])
     search = fcol1.text_input(
         "Search", placeholder="Company, project, or county…", label_visibility="collapsed"
     )
@@ -886,13 +1046,7 @@ def main() -> None:
         label_visibility="collapsed",
     )
     gas_focus = fcol3.toggle("Gas-to-power", value=False)
-    stitched_only = fcol4.toggle(
-        "Stitched only",
-        value=False,
-        help="Show only filings linked across ERCOT ↔ TCEQ.",
-        disabled=n_links == 0,
-    )
-    source_pick = fcol5.multiselect(
+    source_pick = fcol4.multiselect(
         "Sources", ["ercot", "tceq"], default=["ercot", "tceq"], label_visibility="collapsed"
     )
 
@@ -935,6 +1089,7 @@ def main() -> None:
             )
 
             map_h = MAP_HEIGHT
+            pin_focus = bool(st.session_state.get("_map_table_focus"))
 
             if mode == "Site view" and focus is not None:
                 _site_view(focus, focus_pt)
@@ -952,6 +1107,16 @@ def main() -> None:
                     on_select="rerun",
                     selection_mode="points",
                 )
+                if pin_focus:
+                    st.markdown('<div class="qs-map-reset"></div>', unsafe_allow_html=True)
+                    if st.button(
+                        "Reset search",
+                        key="btn_reset_map_search",
+                        help="Clear the map pin filter and show all filings again.",
+                    ):
+                        st.session_state._map_table_focus = False
+                        st.session_state._last_map_sel = None
+                        st.rerun()
                 points = []
                 if map_event and getattr(map_event, "selection", None):
                     sel = map_event.selection
@@ -972,45 +1137,72 @@ def main() -> None:
                             if len(hit):
                                 st.session_state._last_map_sel = map_sel
                                 st.session_state.record_pick = _label(hit.iloc[0])
+                                st.session_state._map_table_focus = True
                                 st.session_state._last_table_sel = None
                                 st.rerun()
 
-            # Filings — chevron expander (not a toggle)
-            with st.expander(
-                f"Filings · {len(view):,}",
-                expanded=True,
-            ):
-                t_head, t_info = st.columns([9, 1], vertical_alignment="center")
-                t_head.caption(
-                    "Click a row to select · same project can appear twice until stitched"
+            # Filings — when a map pin is selected, show only that row.
+            map_focus = bool(st.session_state.get("_map_table_focus"))
+            if map_focus and focus is not None:
+                table_df = view.loc[[focus.name]].reset_index(drop=True)
+            else:
+                table_df = view
+                st.session_state._map_table_focus = False
+
+            filings_label = (
+                f"Filings · selected pin"
+                if map_focus and len(table_df) == 1
+                else f"Filings · {len(table_df):,}"
+            )
+            if "filings_open" not in st.session_state:
+                st.session_state.filings_open = True
+
+            head_l, head_r = st.columns([14, 1], vertical_alignment="center")
+            with head_l:
+                st.markdown('<div class="qs-filings-marker"></div>', unsafe_allow_html=True)
+                chevron = (
+                    ":material/expand_more:"
+                    if st.session_state.filings_open
+                    else ":material/chevron_right:"
                 )
-                with t_info:
-                    _schema_help()
-                table = view[
-                    ["source", "source_id", "project_name", "company", "county",
-                     "kind", "stage", "status", "capacity_mw",
+                if st.button(
+                    filings_label,
+                    key="btn_filings_toggle",
+                    type="tertiary",
+                    icon=chevron,
+                    help="Show or hide the filings table",
+                ):
+                    st.session_state.filings_open = not st.session_state.filings_open
+                    st.rerun()
+            with head_r:
+                _schema_help()
+
+            if st.session_state.filings_open:
+                table = table_df[
+                    ["project_name", "capacity_mw", "status", "company", "kind",
+                     "source", "source_id", "county", "stage",
                      "completion_probability", "record_date"]
                 ]
                 event = st.dataframe(
                     table,
                     width="stretch",
                     hide_index=True,
-                    height=220,
+                    height=220 if not map_focus else 120,
                     on_select="rerun",
                     selection_mode="single-row",
                     key="records_table",
                     column_config={
-                        "source": st.column_config.TextColumn("Src", width="small"),
-                        "source_id": st.column_config.TextColumn("ID", width="small"),
                         "project_name": st.column_config.TextColumn("Project"),
-                        "company": st.column_config.TextColumn("Company"),
-                        "county": st.column_config.TextColumn("County", width="small"),
-                        "kind": st.column_config.TextColumn("Type", width="small"),
-                        "stage": st.column_config.TextColumn("Stage"),
-                        "status": st.column_config.TextColumn("Status", width="small"),
                         "capacity_mw": st.column_config.NumberColumn(
                             "MW", format="%.0f", width="small"
                         ),
+                        "status": st.column_config.TextColumn("Status", width="small"),
+                        "company": st.column_config.TextColumn("Company"),
+                        "kind": st.column_config.TextColumn("Type", width="small"),
+                        "source": st.column_config.TextColumn("Src", width="small"),
+                        "source_id": st.column_config.TextColumn("ID", width="small"),
+                        "county": st.column_config.TextColumn("County", width="small"),
+                        "stage": st.column_config.TextColumn("Stage"),
                         "completion_probability": st.column_config.NumberColumn(
                             "P(IA)",
                             help="Model P(reach signed Interconnection Agreement). ERCOT only.",
@@ -1023,16 +1215,17 @@ def main() -> None:
                 selected_rows = event.selection.rows if event and event.selection else []
                 if selected_rows:
                     tidx = int(selected_rows[0])
-                    if (
-                        0 <= tidx < len(labels)
-                        and st.session_state.get("_last_table_sel") != tidx
-                    ):
-                        st.session_state._last_table_sel = tidx
-                        st.session_state.record_pick = labels[tidx]
-                        st.session_state._last_map_sel = None
-                        st.session_state._map_epoch = (
-                            st.session_state.get("_map_epoch", 0) + 1
-                        )
+                    if 0 <= tidx < len(table_df):
+                        picked = _label(table_df.iloc[tidx])
+                        if st.session_state.get("_last_table_sel") != picked:
+                            st.session_state._last_table_sel = picked
+                            st.session_state.record_pick = picked
+                            # Manual table pick leaves the full list (unless already pin-focused).
+                            if not map_focus:
+                                st.session_state._last_map_sel = None
+                            st.session_state._map_epoch = (
+                                st.session_state.get("_map_epoch", 0) + 1
+                            )
 
     # Right: story rail (chat-like beats)
     with story:
@@ -1057,6 +1250,7 @@ def main() -> None:
                 if choice != prev_pick:
                     st.session_state._last_table_sel = None
                     st.session_state._last_map_sel = None
+                    st.session_state._map_table_focus = False
                     st.session_state._map_epoch = st.session_state.get("_map_epoch", 0) + 1
                 row = view.iloc[labels.index(choice)]
                 record_key = f"{row['source']}:{row['source_id']}"
