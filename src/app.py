@@ -1,4 +1,4 @@
-"""Project Radar — Streamlit app.
+"""QueueSense — Streamlit app.
 
 Live origination intelligence for Texas power projects. Runs against the REAL
 unified record table (ERCOT interconnection queue + TCEQ power-generation air
@@ -195,9 +195,9 @@ def _site_view(row: pd.Series) -> None:
 # App
 # --------------------------------------------------------------------------- #
 def main() -> None:
-    st.set_page_config(page_title="Project Radar", page_icon="📡", layout="wide")
+    st.set_page_config(page_title="QueueSense", page_icon="📡", layout="wide")
     _inject_css()
-    st.title("Project Radar")
+    st.title("QueueSense")
     st.caption(
         "Live origination intelligence for Texas power projects — "
         "ERCOT interconnection queue + TCEQ air permits in one view."

@@ -1,4 +1,4 @@
-# Project Radar — Roadmap
+# QueueSense — Roadmap
 
 Bite-sized chunks for the Candid hackathon (Sat 8/8/2026, ~5 hrs, 2 people).
 See [CHARTER.md](CHARTER.md) for the goal and [SOURCES.md](SOURCES.md) for the data.

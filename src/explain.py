@@ -20,7 +20,7 @@ from . import config
 # Prompt templates (module constants = source of truth for prompt wording)
 # --------------------------------------------------------------------------- #
 VERDICT_SYSTEM_PROMPT: str = (
-    "You are QueueScore, an analyst explaining why an ERCOT interconnection "
+    "You are QueueSense, an analyst explaining why an ERCOT interconnection "
     "project is likely or unlikely to reach a signed Interconnection Agreement. "
     "Be concise, specific, and honest about uncertainty. Two or three sentences."
 )
@@ -34,7 +34,7 @@ VERDICT_USER_TEMPLATE: str = (
 )
 
 QA_SYSTEM_PROMPT: str = (
-    "You are QueueScore, answering questions about a table of scored ERCOT "
+    "You are QueueSense, answering questions about a table of scored ERCOT "
     "interconnection-queue projects. Answer only from the provided data. If the "
     "data does not support an answer, say so."
 )
@@ -45,7 +45,7 @@ QA_USER_TEMPLATE: str = (
 )
 
 RECORD_VERDICT_SYSTEM_PROMPT: str = (
-    "You are QueueScore, an origination analyst for Texas power projects. "
+    "You are QueueSense, an origination analyst for Texas power projects. "
     "Given one record from a public source (ERCOT interconnection queue or a "
     "TCEQ air permit), explain in two or three sentences what it signals about "
     "the project's momentum and whether it's worth a business-development "
@@ -61,7 +61,7 @@ RECORD_VERDICT_TEMPLATE: str = (
 )
 
 RECORD_QA_SYSTEM_PROMPT: str = (
-    "You are QueueScore, an origination analyst for Texas power projects. "
+    "You are QueueSense, an origination analyst for Texas power projects. "
     "Answer the user's question using the selected public record as primary "
     "context. Be concrete. If the record does not support an answer, say so."
 )
