@@ -120,22 +120,25 @@ _CSS = f"""
     margin: 0.35rem 0 0 0; max-width: 34rem; color: rgba(46, 51, 42, 0.72);
     font-size: 1.0rem; line-height: 1.35;
   }}
-  .qs-pills {{ display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }}
+  /* Hero: brand | tight status cluster */
+  div[data-testid="stHorizontalBlock"]:has(.qs-hero-mark) {{
+    align-items: center !important;
+    margin: 0.15rem 0 0.85rem 0 !important;
+  }}
+  .qs-status-cluster {{
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end;
+    gap: 0.4rem;
+  }}
   .qs-pill {{
     display: inline-flex; align-items: center; gap: 0.4rem;
-    padding: 0.38rem 0.75rem; border-radius: 999px;
+    height: 2rem; padding: 0 0.75rem; border-radius: 999px;
     background: rgba(231, 235, 225, 0.95); color: {PALETTE['ink']};
-    font-size: 0.86rem; font-weight: 600; border: 1px solid rgba(74, 83, 60, 0.12);
+    font-size: 0.82rem; font-weight: 600; border: 1px solid rgba(74, 83, 60, 0.12);
+    white-space: nowrap; box-sizing: border-box; line-height: 1;
   }}
   .qs-pill strong {{ font-variant-numeric: tabular-nums; }}
   .qs-pill-live {{
     background: rgba(74, 83, 60, 0.12); border-color: rgba(74, 83, 60, 0.22);
-  }}
-  .qs-dot {{
-    width: 0.55rem; height: 0.55rem; border-radius: 50%;
-    background: {PALETTE['olive']};
-    box-shadow: 0 0 0 0 rgba(74, 83, 60, 0.55);
-    animation: qs-pulse 1.8s ease-out infinite;
   }}
   .qs-pill-link {{
     background: rgba(200, 142, 114, 0.16); border-color: rgba(200, 142, 114, 0.35);
@@ -143,147 +146,145 @@ _CSS = f"""
   .qs-pill-link-on {{
     background: rgba(200, 142, 114, 0.32); border-color: rgba(200, 142, 114, 0.55);
   }}
-  /* Hero "N stitched" control — looks like a pill, toggles the stitched lens */
+  .qs-dot {{
+    width: 0.5rem; height: 0.5rem; border-radius: 50%; flex: 0 0 auto;
+    background: {PALETTE['olive']};
+    box-shadow: 0 0 0 0 rgba(74, 83, 60, 0.55);
+    animation: qs-pulse 1.8s ease-out infinite;
+  }}
+  /* Action pills — identical chrome for Live / filings / stitched / refresh */
+  div[data-testid="stHorizontalBlock"]:has(.qs-hero-actions) {{
+    align-items: center !important;
+    gap: 0.4rem !important;
+    margin: 0 !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-hero-actions) {{
+    height: 0 !important; margin: 0 !important; padding: 0 !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-live-btn)
+    [data-testid="stButton"] > button,
+  div[data-testid="stElementContainer"]:has(.qs-filings-btn)
+    [data-testid="stButton"] > button,
+  div[data-testid="stElementContainer"]:has(.qs-stitched-btn)
+    [data-testid="stButton"] > button,
+  div[data-testid="stElementContainer"]:has(.qs-refresh-btn)
+    [data-testid="stButton"] > button {{
+    height: 2rem !important;
+    min-height: 2rem !important;
+    max-height: 2rem !important;
+    border-radius: 999px !important;
+    padding: 0 0.75rem !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    justify-content: center !important;
+    opacity: 1 !important;
+    cursor: default !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-live-btn)
+    [data-testid="stButton"] > button {{
+    background: rgba(74, 83, 60, 0.12) !important;
+    border: 1px solid rgba(74, 83, 60, 0.22) !important;
+    color: {PALETTE['ink']} !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-filings-btn)
+    [data-testid="stButton"] > button,
+  div[data-testid="stElementContainer"]:has(.qs-refresh-btn)
+    [data-testid="stButton"] > button {{
+    background: rgba(231, 235, 225, 0.95) !important;
+    border: 1px solid rgba(74, 83, 60, 0.12) !important;
+    color: {PALETTE['ink']} !important;
+  }}
   div[data-testid="stElementContainer"]:has(.qs-stitched-btn)
     [data-testid="stButton"] > button {{
-    border-radius: 999px !important;
-    padding: 0.38rem 0.75rem !important;
     background: rgba(200, 142, 114, 0.16) !important;
     border: 1px solid rgba(200, 142, 114, 0.35) !important;
     color: {PALETTE['ink']} !important;
-    font-size: 0.86rem !important;
-    font-weight: 600 !important;
-    box-shadow: none !important;
-    transform: none !important;
+    cursor: pointer !important;
   }}
   div[data-testid="stElementContainer"]:has(.qs-stitched-btn)
     [data-testid="stButton"] > button:hover {{
     background: rgba(200, 142, 114, 0.28) !important;
-    color: {PALETTE['ink']} !important;
-    border-color: rgba(200, 142, 114, 0.5) !important;
   }}
   div[data-testid="stElementContainer"]:has(.qs-stitched-btn.on)
     [data-testid="stButton"] > button {{
     background: rgba(200, 142, 114, 0.36) !important;
     border-color: rgba(200, 142, 114, 0.6) !important;
-    box-shadow: inset 0 0 0 1px rgba(200, 142, 114, 0.35) !important;
-  }}
-  div[data-testid="stElementContainer"]:has(.qs-stitched-btn)
-    [data-testid="stButton"] > button:disabled {{
-    opacity: 0.45;
   }}
   div[data-testid="stElementContainer"]:has(.qs-refresh-btn)
     [data-testid="stButton"] > button {{
-    border-radius: 999px !important;
-    padding: 0.38rem 0.75rem !important;
-    background: rgba(231, 235, 225, 0.95) !important;
-    border: 1px solid rgba(74, 83, 60, 0.12) !important;
-    color: {PALETTE['ink']} !important;
+    cursor: pointer !important;
     font-size: 0.78rem !important;
     font-weight: 600 !important;
-    box-shadow: none !important;
-    transform: none !important;
+    letter-spacing: 0.01em;
+    overflow: hidden !important;
+  }}
+  div[data-testid="stElementContainer"]:has(.qs-refresh-btn)
+    [data-testid="stButton"] > button p,
+  div[data-testid="stElementContainer"]:has(.qs-refresh-btn)
+    [data-testid="stButton"] > button span {{
     white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }}
   div[data-testid="stElementContainer"]:has(.qs-refresh-btn)
     [data-testid="stButton"] > button:hover {{
     background: rgba(74, 83, 60, 0.12) !important;
-    color: {PALETTE['ink']} !important;
-    border-color: rgba(74, 83, 60, 0.28) !important;
   }}
-  .qs-hero-pills-row {{
-    display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center;
-    justify-content: flex-end;
+  /* Filter row — top-align; equal control heights */
+  div[data-testid="stTextInput"][class*="st-key-filter_search"] input,
+  div[data-testid="stMultiSelect"][class*="st-key-filter_status"]
+    [data-baseweb="select"] > div,
+  div[data-testid="stMultiSelect"][class*="st-key-filter_sources"]
+    [data-baseweb="select"] > div {{
+    min-height: 2.5rem !important;
+  }}
+  /* Story rail — shared quiet card language */
+  .qs-rail-label {{
+    font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+    font-weight: 700; color: rgba(46, 51, 42, 0.4); margin: 0.55rem 0 0.35rem 0;
+  }}
+  .qs-rail-label:first-child {{ margin-top: 0; }}
+  .qs-msg, .qs-link-card {{
+    margin: 0 0 0.5rem 0; padding: 0.7rem 0.75rem; border-radius: 12px;
+    background: rgba(231, 235, 225, 0.72); color: {PALETTE['ink']};
+    border: 1px solid rgba(46, 51, 42, 0.06);
+    animation: qs-fade-up 320ms ease both;
+    line-height: 1.4;
+  }}
+  .qs-msg p, .qs-link-card p {{ margin: 0 0 0.25rem 0; }}
+  .qs-msg p:last-child, .qs-link-card p:last-child {{ margin-bottom: 0; }}
+  /* Shared text column: aligns with stage-step labels across cards */
+  .qs-msg > p, .qs-link-card > p {{
+    padding-left: calc(1.1rem + 0.5rem);
+  }}
+  .qs-msg-stage {{
+    background: rgba(74, 83, 60, 0.07);
   }}
   .qs-link-card {{
-    margin: 0.35rem 0; padding: 0.85rem 0.95rem;
-    border-radius: 14px; border: 1px solid rgba(200, 142, 114, 0.35);
-    background: linear-gradient(135deg, rgba(200, 142, 114, 0.14), rgba(150, 161, 140, 0.1));
-    animation: qs-fade-up 360ms ease both;
+    border-left: 3px solid rgba(200, 142, 114, 0.55);
   }}
   .qs-link-card .qs-kicker {{
-    font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
-    font-weight: 700; color: {PALETTE['terracotta']}; margin: 0 0 0.35rem 0;
+    font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 700; color: {PALETTE['terracotta']}; margin: 0 0 0.25rem 0;
   }}
-
-  /* Story rail — chat-like beats on the right */
-  .qs-rail-label {{
-    font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
-    font-weight: 700; color: rgba(46, 51, 42, 0.45); margin: 0 0 0.65rem 0;
-  }}
-  .qs-msg {{
-    margin: 0 0 0.65rem 0; padding: 0.8rem 0.95rem; border-radius: 16px 16px 16px 6px;
-    background: rgba(231, 235, 225, 0.9); color: {PALETTE['ink']};
-    animation: qs-fade-up 320ms ease both;
-    line-height: 1.45;
-  }}
-  .qs-msg p {{ margin: 0 0 0.35rem 0; }}
-  .qs-msg p:last-child {{ margin-bottom: 0; }}
-  .qs-msg-stage {{
-    background: rgba(74, 83, 60, 0.12); border: 1px solid rgba(74, 83, 60, 0.18);
-  }}
-  .qs-msg-score {{
-    background: linear-gradient(160deg, rgba(200, 142, 114, 0.16), rgba(74, 83, 60, 0.08));
-    border: 1px solid rgba(200, 142, 114, 0.28);
-    padding: 1rem 0.95rem 0.95rem;
-  }}
-  .qs-gauge-wrap {{
-    display: flex; flex-direction: column; align-items: center; gap: 0.55rem;
-    margin: 0.15rem 0 0.35rem 0;
-  }}
-  .qs-gauge {{
-    position: relative; width: 148px; height: 148px;
-  }}
-  .qs-gauge svg {{ width: 100%; height: 100%; display: block; transform: rotate(-90deg); }}
-  .qs-gauge-track {{ fill: none; stroke: rgba(46, 51, 42, 0.1); stroke-width: 10; }}
-  .qs-gauge-fill {{
-    fill: none; stroke: {PALETTE['terracotta']}; stroke-width: 10;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 700ms ease;
-  }}
-  .qs-gauge-fill.tier-top {{ stroke: {PALETTE['olive']}; }}
-  .qs-gauge-fill.tier-likely {{ stroke: {PALETTE['sage']}; }}
-  .qs-gauge-fill.tier-watch {{ stroke: {PALETTE['terracotta']}; }}
-  .qs-gauge-fill.tier-risk {{ stroke: #A65D4A; }}
-  .qs-gauge-center {{
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; text-align: center;
-    pointer-events: none;
-  }}
-  .qs-gauge-pct {{
-    font-family: Fraunces, Georgia, serif; font-size: 2rem; font-weight: 700;
-    letter-spacing: -0.03em; line-height: 1; color: {PALETTE['ink']}; margin: 0;
-  }}
-  .qs-gauge-tier {{
-    margin: 0.2rem 0 0 0; font-size: 0.78rem; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: {PALETTE['terracotta']};
-  }}
-  .qs-tier-bar {{
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.28rem;
-    width: 100%; margin: 0.35rem 0 0.15rem 0;
-  }}
-  .qs-tier-seg {{
-    height: 6px; border-radius: 999px; background: rgba(46, 51, 42, 0.1);
-  }}
-  .qs-tier-seg.on {{ background: {PALETTE['olive']}; }}
-  .qs-tier-seg.on-warm {{ background: {PALETTE['terracotta']}; }}
-  .qs-tier-labels {{
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.28rem;
-    width: 100%; font-size: 0.65rem; color: rgba(46, 51, 42, 0.55);
-    text-align: center; font-weight: 600;
-  }}
-  .qs-tier-labels .on {{ color: {PALETTE['ink']}; font-weight: 700; }}
+  .qs-msg-meta {{ font-size: 0.82rem; opacity: 0.72; }}
 
   .qs-funnel {{
-    display: flex; flex-direction: column; gap: 0; margin: 0.35rem 0 0.15rem 0;
+    display: flex; flex-direction: column; gap: 0; margin: 0;
   }}
   .qs-funnel-step {{
-    display: grid; grid-template-columns: 22px 1fr; gap: 0.65rem;
-    align-items: start; position: relative; min-height: 2.1rem;
+    display: grid; grid-template-columns: 1.1rem 1fr; gap: 0.5rem;
+    align-items: start; position: relative; min-height: 1.85rem;
   }}
   .qs-funnel-step:not(:last-child)::before {{
-    content: ""; position: absolute; left: 10px; top: 18px; bottom: -2px;
+    content: ""; position: absolute; left: 7px; top: 16px; bottom: -2px;
     width: 2px; background: rgba(46, 51, 42, 0.12);
   }}
   .qs-funnel-step.done:not(:last-child)::before {{
@@ -293,11 +294,11 @@ _CSS = f"""
     background: linear-gradient({PALETTE['olive']}, rgba(46, 51, 42, 0.12));
   }}
   .qs-funnel-dot {{
-    width: 22px; height: 22px; border-radius: 50%;
+    width: 1.1rem; height: 1.1rem; border-radius: 50%;
     border: 2px solid rgba(46, 51, 42, 0.18);
     background: {PALETTE['bg']};
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.65rem; font-weight: 700; color: rgba(46, 51, 42, 0.4);
+    font-size: 0.58rem; font-weight: 700; color: rgba(46, 51, 42, 0.4);
     z-index: 1;
   }}
   .qs-funnel-step.done .qs-funnel-dot {{
@@ -306,28 +307,105 @@ _CSS = f"""
   .qs-funnel-step.current .qs-funnel-dot {{
     background: {PALETTE['terracotta']}; border-color: {PALETTE['terracotta']};
     color: {PALETTE['bg']};
-    box-shadow: 0 0 0 4px rgba(200, 142, 114, 0.22);
-    animation: qs-pulse 1.8s ease-out infinite;
+    box-shadow: 0 0 0 3px rgba(200, 142, 114, 0.2);
   }}
   .qs-funnel-label {{
-    font-size: 0.88rem; font-weight: 600; color: rgba(46, 51, 42, 0.45);
-    padding-top: 0.12rem; line-height: 1.25;
+    font-size: 0.86rem; font-weight: 600; color: rgba(46, 51, 42, 0.45);
+    padding-top: 0.05rem; line-height: 1.25;
   }}
   .qs-funnel-step.done .qs-funnel-label {{ color: rgba(46, 51, 42, 0.72); }}
   .qs-funnel-step.current .qs-funnel-label {{
     color: {PALETTE['ink']}; font-weight: 700;
   }}
+  .qs-msg-stage .qs-msg-meta {{
+    margin-top: 0.4rem; padding-left: calc(1.1rem + 0.5rem);
+  }}
+
+  /* Completion gauge — hover ring + drivers reveal */
+  .qs-msg-score {{
+    background: rgba(200, 142, 114, 0.1);
+    border: 1px solid rgba(200, 142, 114, 0.2);
+    padding: 0.85rem 0.75rem 0.7rem;
+    text-align: center;
+  }}
+  .qs-msg-score > p {{ padding-left: 0 !important; }}
+  .qs-gauge-wrap {{
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    margin: 0;
+  }}
+  .qs-gauge {{
+    position: relative; width: 124px; height: 124px;
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    cursor: help;
+  }}
+  .qs-msg-score:hover .qs-gauge {{
+    transform: scale(1.07) rotate(-3deg);
+  }}
+  .qs-gauge svg {{ width: 100%; height: 100%; display: block; transform: rotate(-90deg); }}
+  .qs-gauge-track {{
+    fill: none; stroke: rgba(46, 51, 42, 0.1); stroke-width: 9;
+    transition: stroke 280ms ease, stroke-width 280ms ease;
+  }}
+  .qs-msg-score:hover .qs-gauge-track {{
+    stroke: rgba(46, 51, 42, 0.16); stroke-width: 10;
+  }}
+  .qs-gauge-fill {{
+    fill: none; stroke: {PALETTE['terracotta']}; stroke-width: 9;
+    stroke-linecap: round;
+    transition: stroke-width 280ms ease, filter 280ms ease;
+    animation: qs-gauge-draw 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }}
+  .qs-msg-score:hover .qs-gauge-fill {{
+    stroke-width: 12;
+    filter: drop-shadow(0 0 7px rgba(200, 142, 114, 0.45));
+  }}
+  .qs-gauge-fill.tier-top {{ stroke: {PALETTE['olive']}; }}
+  .qs-msg-score:hover .qs-gauge-fill.tier-top {{
+    filter: drop-shadow(0 0 7px rgba(74, 83, 60, 0.4));
+  }}
+  .qs-gauge-fill.tier-likely {{ stroke: {PALETTE['sage']}; }}
+  .qs-gauge-fill.tier-watch {{ stroke: {PALETTE['terracotta']}; }}
+  .qs-gauge-fill.tier-risk {{ stroke: #A65D4A; }}
+  .qs-gauge-center {{
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    pointer-events: none;
+    transition: transform 280ms ease;
+  }}
+  .qs-msg-score:hover .qs-gauge-center {{ transform: scale(1.05); }}
+  .qs-gauge-pct {{
+    font-family: Fraunces, Georgia, serif; font-size: 1.7rem; font-weight: 700;
+    letter-spacing: -0.03em; line-height: 1; color: {PALETTE['ink']}; margin: 0;
+  }}
+  .qs-gauge-caption {{
+    margin: 0.4rem 0 0 0; font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: rgba(46, 51, 42, 0.5); white-space: nowrap;
+  }}
+  .qs-drivers-panel {{
+    width: 100%; max-height: 0; opacity: 0; overflow: hidden;
+    margin-top: 0; text-align: left;
+    transition: max-height 320ms ease, opacity 240ms ease, margin-top 240ms ease;
+  }}
+  .qs-msg-score:hover .qs-drivers-panel {{
+    max-height: 14rem; opacity: 1; margin-top: 0.65rem;
+  }}
+  .qs-drivers-kicker {{
+    font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 700; color: rgba(46, 51, 42, 0.45);
+    margin: 0 0 0.25rem 0; padding-left: 0 !important; text-align: left;
+  }}
   .qs-drivers {{
-    margin: 0.45rem 0 0 0; padding: 0; list-style: none; font-size: 0.86rem;
+    margin: 0; padding: 0; list-style: none; font-size: 0.82rem;
   }}
   .qs-drivers li {{
     display: flex; justify-content: space-between; gap: 0.75rem;
-    padding: 0.15rem 0; border-bottom: 1px solid rgba(46, 51, 42, 0.06);
+    padding: 0.18rem 0; border-bottom: 1px solid rgba(46, 51, 42, 0.06);
   }}
   .qs-drivers li:last-child {{ border-bottom: 0; }}
   .qs-drv-pos {{ color: {PALETTE['olive']}; font-variant-numeric: tabular-nums; }}
   .qs-drv-neg {{ color: {PALETTE['terracotta']}; font-variant-numeric: tabular-nums; }}
-  .qs-msg-meta {{ font-size: 0.88rem; opacity: 0.78; }}
+
   .qs-drawer-bar {{
     display: flex; align-items: center; justify-content: space-between;
     gap: 0.75rem; margin: 0.35rem 0 0.15rem 0;
@@ -432,6 +510,9 @@ _CSS = f"""
     70% {{ box-shadow: 0 0 0 10px rgba(74, 83, 60, 0); }}
     100% {{ box-shadow: 0 0 0 0 rgba(74, 83, 60, 0); }}
   }}
+  @keyframes qs-gauge-draw {{
+    from {{ stroke-dashoffset: 264; }}
+  }}
   @keyframes qs-fade-up {{
     from {{ opacity: 0; transform: translateY(8px); }}
     to {{ opacity: 1; transform: translateY(0); }}
@@ -444,42 +525,61 @@ def _inject_css() -> None:
     st.markdown(_CSS, unsafe_allow_html=True)
 
 
-def _hero(n_records: int, n_links: int, stamps: str) -> bool:
-    """Brand + live pulse strip. Returns whether the stitched lens is on.
+def _format_freshness(fresh: dict) -> tuple[str, str]:
+    """Compact pill label + full detail for the refresh control tooltip."""
+    detail_parts = []
+    times = []
+    for name, ts in fresh.items():
+        if ts is not None:
+            detail_parts.append(f"{name.upper()} {ts:%b %d %H:%M}")
+            times.append(ts)
+        else:
+            detail_parts.append(f"{name.upper()} never")
+    detail = " · ".join(detail_parts) if detail_parts else "No freshness data"
+    if not times:
+        return "Refresh data", detail
+    # Same minute across sources → one clean line; else short per-source times.
+    keyed = {(t.year, t.month, t.day, t.hour, t.minute) for t in times}
+    if len(keyed) == 1:
+        label = f"Updated {times[0]:%b %d · %H:%M}"
+    else:
+        label = " · ".join(
+            f"{name.upper()} {ts:%H:%M}" if ts is not None else f"{name.upper()} —"
+            for name, ts in fresh.items()
+        )
+    return label, detail
 
-    Clicking the stitched pill toggles ``st.session_state.stitched_only``.
-    Clicking the freshness stamp pill queues a live data refresh.
-    """
+
+def _hero(n_records: int, n_links: int, stamps: str, stamps_help: str) -> bool:
+    """Brand left; equal-height status pills right (in line with QueueScore)."""
     stitched_on = bool(st.session_state.get("stitched_only", False))
     if n_links == 0:
         stitched_on = False
         st.session_state.stitched_only = False
 
-    brand, pills = st.columns([1.35, 1], vertical_alignment="bottom")
+    brand, pills = st.columns([1.15, 1], gap="large", vertical_alignment="center")
     with brand:
         st.markdown(
             (
-                '<div class="qs-hero" style="margin:0;">'
-                '<div>'
+                '<div class="qs-hero-mark"></div>'
                 '<p class="qs-brand">QueueScore</p>'
                 '<p class="qs-tagline">'
-                "Live Texas power origination — ERCOT queue + TCEQ permits, "
-                "stitched when we can prove it's the same project."
-                "</p></div></div>"
+                "Live Texas power origination — ERCOT queue + TCEQ permits"
+                "</p>"
             ),
             unsafe_allow_html=True,
         )
     with pills:
-        p1, p2, p3, p4 = st.columns([0.85, 1.15, 1.15, 2.4], vertical_alignment="center")
-        p1.markdown(
-            '<span class="qs-pill qs-pill-live"><span class="qs-dot"></span> Live</span>',
-            unsafe_allow_html=True,
-        )
-        p2.markdown(
-            f'<span class="qs-pill"><strong>{n_records:,}</strong> filings</span>',
-            unsafe_allow_html=True,
-        )
-        with p3:
+        # One row of identical-height controls (buttons share the same chrome).
+        st.markdown('<div class="qs-hero-actions"></div>', unsafe_allow_html=True)
+        c1, c2, c3, c4 = st.columns([0.85, 1.1, 1.15, 2.1], gap="small")
+        with c1:
+            st.markdown('<div class="qs-live-btn"></div>', unsafe_allow_html=True)
+            st.button("Live", key="pill_live", disabled=True)
+        with c2:
+            st.markdown('<div class="qs-filings-btn"></div>', unsafe_allow_html=True)
+            st.button(f"{n_records:,} filings", key="pill_filings", disabled=True)
+        with c3:
             on_cls = " on" if stitched_on else ""
             st.markdown(
                 f'<div class="qs-stitched-btn{on_cls}"></div>',
@@ -493,13 +593,13 @@ def _hero(n_records: int, n_links: int, stamps: str) -> bool:
             ):
                 st.session_state.stitched_only = not stitched_on
                 st.rerun()
-        with p4:
+        with c4:
             st.markdown('<div class="qs-refresh-btn"></div>', unsafe_allow_html=True)
             if st.button(
                 stamps,
                 key="btn_refresh_stamps",
                 icon=":material/refresh:",
-                help="Pull fresh ERCOT + TCEQ data. Shows last-updated times.",
+                help=f"Last updated — {stamps_help}. Click to pull fresh ERCOT + TCEQ data.",
             ):
                 st.session_state._do_refresh = True
                 st.rerun()
@@ -639,7 +739,7 @@ def _attach_model_scores(records: pd.DataFrame) -> pd.DataFrame:
     sid = ercot["source_id"].astype(str)
     out.loc[ercot.index, "completion_probability"] = sid.map(by_id["completion_probability"]).values
     out.loc[ercot.index, "ia_tier"] = sid.map(by_id["ia_tier"]).fillna("").values
-    # Keep scored feature frame for SHAP (full-queue congestion).
+    # Keep scored frame for on-demand SHAP drivers.
     st.session_state["_ercot_scored"] = scored
     return out
 
@@ -654,7 +754,7 @@ def _drivers_for(row: pd.Series) -> list[tuple[str, float]]:
         return cache[sid]
     bundle = _load_score_bundle()
     scored = st.session_state.get("_ercot_scored")
-    if bundle is None or scored is None or scored.empty:
+    if bundle is None or scored is None or getattr(scored, "empty", True):
         return []
     hit = scored[scored["q_id"].astype(str) == sid]
     if hit.empty:
@@ -665,7 +765,7 @@ def _drivers_for(row: pd.Series) -> list[tuple[str, float]]:
 
 
 def _render_score_card(row: pd.Series) -> None:
-    """Prominent P(IA) gauge + tier strip for ERCOT rows."""
+    """Compact P(IA) gauge; hover reveals SHAP drivers. ERCOT only."""
     if row.get("source") != "ercot":
         return
     p = row.get("completion_probability")
@@ -678,7 +778,6 @@ def _render_score_card(row: pd.Series) -> None:
     prob = float(p)
     tier = str(row.get("ia_tier") or score_model.ia_tier(prob))
     pct_label = f"{prob:.0%}"
-    # SVG circle: r=42 → circumference ≈ 263.89
     c = 2 * 3.14159265 * 42
     offset = c * (1.0 - max(0.0, min(1.0, prob)))
     tier_class = {
@@ -687,76 +786,47 @@ def _render_score_card(row: pd.Series) -> None:
         "Watch": "tier-watch",
         "At-risk": "tier-risk",
     }.get(tier, "tier-watch")
-    tiers = ["At-risk", "Watch", "Likely", "Top"]
-    lit = {"At-risk": 1, "Watch": 2, "Likely": 3, "Top": 4}.get(tier, 2)
-    segs = []
-    labels = []
-    for i, name in enumerate(tiers, start=1):
-        on = i <= lit
-        warm = on and tier in ("Watch", "At-risk") and i == lit
-        cls = "on-warm" if warm else ("on" if on else "")
-        segs.append(f'<div class="qs-tier-seg {cls}"></div>')
-        labels.append(
-            f'<span class="{"on" if name == tier else ""}">{html.escape(name)}</span>'
+
+    drivers_html = ""
+    try:
+        drivers = _drivers_for(row)
+    except Exception:  # noqa: BLE001
+        drivers = []
+    if drivers:
+        items = []
+        for feat, val in drivers:
+            label = html.escape(score_model.FEATURE_LABELS.get(feat, feat))
+            cls = "qs-drv-pos" if val >= 0 else "qs-drv-neg"
+            sign = "+" if val >= 0 else ""
+            items.append(
+                f'<li><span>{label}</span>'
+                f'<span class="{cls}">{sign}{val:.2f}</span></li>'
+            )
+        drivers_html = (
+            f'<div class="qs-drivers-panel">'
+            f'<p class="qs-drivers-kicker">Why this score</p>'
+            f'<ul class="qs-drivers">{"".join(items)}</ul>'
+            f'</div>'
         )
 
     # Keep HTML flush-left — indented lines become markdown code blocks.
     st.markdown(
         (
             f'<div class="qs-msg qs-msg-score">'
-            f'<p class="qs-kicker" style="font-size:0.72rem;letter-spacing:0.08em;'
-            f'text-transform:uppercase;font-weight:700;color:{PALETTE["terracotta"]};'
-            f'margin:0 0 0.15rem 0;text-align:center;">Completion outlook</p>'
             f'<div class="qs-gauge-wrap">'
             f'<div class="qs-gauge">'
             f'<svg viewBox="0 0 100 100" aria-hidden="true">'
             f'<circle class="qs-gauge-track" cx="50" cy="50" r="42"></circle>'
             f'<circle class="qs-gauge-fill {tier_class}" cx="50" cy="50" r="42" '
-            f'stroke-dasharray="{c:.2f}" stroke-dashoffset="{offset:.2f}"></circle>'
+            f'style="stroke-dasharray:{c:.2f};stroke-dashoffset:{offset:.2f}"></circle>'
             f'</svg>'
             f'<div class="qs-gauge-center">'
             f'<p class="qs-gauge-pct">{html.escape(pct_label)}</p>'
-            f'<p class="qs-gauge-tier">{html.escape(tier)}</p>'
             f'</div></div>'
-            f'<div class="qs-tier-bar">{"".join(segs)}</div>'
-            f'<div class="qs-tier-labels">{"".join(labels)}</div>'
-            f'</div>'
-            f'<p class="qs-msg-meta" style="text-align:center;margin-top:0.45rem;">'
-            f'Model P(reach signed Interconnection Agreement)</p>'
-            f'</div>'
+            f'<p class="qs-gauge-caption">Completion chance</p>'
+            f'{drivers_html}'
+            f'</div></div>'
         ),
-        unsafe_allow_html=True,
-    )
-    sid = str(row["source_id"])
-    show = st.session_state.get("_shap_shown") == sid
-    if st.button(
-        "Hide drivers" if show else "Why this score",
-        key=f"btn_shap_{sid}",
-    ):
-        st.session_state._shap_shown = None if show else sid
-        st.rerun()
-    if st.session_state.get("_shap_shown") != sid:
-        return
-    try:
-        with st.spinner("Computing drivers…"):
-            drivers = _drivers_for(row)
-    except Exception as exc:  # noqa: BLE001
-        st.caption(f"Drivers unavailable ({str(exc)[:100]})")
-        return
-    if not drivers:
-        st.caption("No drivers for this filing.")
-        return
-    items = []
-    for feat, val in drivers:
-        label = html.escape(score_model.FEATURE_LABELS.get(feat, feat))
-        cls = "qs-drv-pos" if val >= 0 else "qs-drv-neg"
-        sign = "+" if val >= 0 else ""
-        items.append(
-            f'<li><span>{label}</span>'
-            f'<span class="{cls}">{sign}{val:.2f}</span></li>'
-        )
-    st.markdown(
-        f'<ul class="qs-drivers">{"".join(items)}</ul>',
         unsafe_allow_html=True,
     )
 
@@ -802,19 +872,18 @@ def _render_stage_ladder(row: pd.Series) -> None:
         )
 
     conf = html.escape(str(row.get("stage_confidence") or ""))
-    ev = html.escape(str(row.get("stage_evidence") or ""))
-    conf_icon = {"high": "●", "medium": "◐", "low": "○"}.get(
-        str(row.get("stage_confidence") or ""), "○"
-    )
+    # Keep evidence short — full detail lives in the brief if needed.
+    signal = str(row.get("stage_signal") or row.get("status") or "").strip()
+    if len(signal) > 42:
+        signal = signal[:40] + "…"
+    signal = html.escape(signal)
     st.markdown(
         (
             f'<div class="qs-msg qs-msg-stage">'
-            f'<p class="qs-kicker" style="font-size:0.72rem;letter-spacing:0.08em;'
-            f'text-transform:uppercase;font-weight:700;color:{PALETTE["olive"]};'
-            f'margin:0 0 0.45rem 0;">Development stage</p>'
             f'<div class="qs-funnel">{"".join(items)}</div>'
-            f'<p class="qs-msg-meta" style="margin-top:0.55rem;">'
-            f'{conf_icon} {conf} confidence — {ev}</p>'
+            f'<p class="qs-msg-meta">'
+            f'{conf} confidence'
+            f'{f" · {signal}" if signal else ""}</p>'
             f'</div>'
         ),
         unsafe_allow_html=True,
@@ -1022,20 +1091,22 @@ def main() -> None:
     # Completion model: P(reach signed IA) for ERCOT rows (LBNL-trained XGB).
     records = _attach_model_scores(records)
 
-    stamps = " · ".join(
-        f"{name.upper()} {ts:%b %d %H:%M}" if ts else f"{name.upper()} never"
-        for name, ts in fresh.items()
-    )
-    stitched_only = _hero(len(records), n_links, html.escape(stamps))
+    stamps, stamps_detail = _format_freshness(fresh)
+    stitched_only = _hero(len(records), n_links, stamps, stamps_detail)
 
-    # Filters — status multiselect: empty = all.
+    # Filters — top-aligned so search matches status dropdown baseline.
     statuses_present = set(records["status"].dropna().astype(str))
     status_options = [s for s in STATUS_COLORS if s in statuses_present] + sorted(
         statuses_present - set(STATUS_COLORS)
     )
-    fcol1, fcol2, fcol3, fcol4 = st.columns([2.4, 1.6, 1.2, 1.4])
+    fcol1, fcol2, fcol3, fcol4 = st.columns(
+        [2.8, 1.8, 1.15, 1.6], gap="small", vertical_alignment="top"
+    )
     search = fcol1.text_input(
-        "Search", placeholder="Company, project, or county…", label_visibility="collapsed"
+        "Search",
+        placeholder="Company, project, or county…",
+        label_visibility="collapsed",
+        key="filter_search",
     )
     status_pick = fcol2.multiselect(
         "Status",
@@ -1044,10 +1115,15 @@ def main() -> None:
         placeholder="All statuses",
         help="Leave empty for all. Add statuses to narrow; X removes a chip.",
         label_visibility="collapsed",
+        key="filter_status",
     )
-    gas_focus = fcol3.toggle("Gas-to-power", value=False)
+    gas_focus = fcol3.toggle("Gas-to-power", value=False, key="filter_gas")
     source_pick = fcol4.multiselect(
-        "Sources", ["ercot", "tceq"], default=["ercot", "tceq"], label_visibility="collapsed"
+        "Sources",
+        ["ercot", "tceq"],
+        default=["ercot", "tceq"],
+        label_visibility="collapsed",
+        key="filter_sources",
     )
 
     view = records[records["source"].isin(source_pick or ["ercot", "tceq"])]
@@ -1067,7 +1143,7 @@ def main() -> None:
         view = view[mask]
     view = view.reset_index(drop=True)
 
-    # Shared focus: table click and the searchable selectbox both write record_pick.
+    # Shared focus: map pin and filings table write record_pick.
     labels = view.apply(_label, axis=1).tolist() if len(view) else []
     if labels and st.session_state.get("record_pick") not in labels:
         st.session_state.record_pick = labels[0]
@@ -1205,7 +1281,7 @@ def main() -> None:
                         "stage": st.column_config.TextColumn("Stage"),
                         "completion_probability": st.column_config.NumberColumn(
                             "P(IA)",
-                            help="Model P(reach signed Interconnection Agreement). ERCOT only.",
+                            help="Chance of signed interconnection agreement (ERCOT).",
                             format="%.0%",
                             width="small",
                         ),
@@ -1237,29 +1313,19 @@ def main() -> None:
             if not labels:
                 st.info("No records match the current filters.")
             else:
-                prev_pick = st.session_state.record_pick
-                sidx = labels.index(prev_pick) if prev_pick in labels else 0
-                choice = st.selectbox(
-                    "Record",
-                    labels,
-                    index=sidx,
-                    label_visibility="collapsed",
-                    help="Type to search, or select from the map / filings list.",
-                )
-                st.session_state.record_pick = choice
-                if choice != prev_pick:
-                    st.session_state._last_table_sel = None
-                    st.session_state._last_map_sel = None
-                    st.session_state._map_table_focus = False
-                    st.session_state._map_epoch = st.session_state.get("_map_epoch", 0) + 1
-                row = view.iloc[labels.index(choice)]
+                # Selection comes from the map / filings table — no dropdown.
+                pick = st.session_state.get("record_pick")
+                if pick not in labels:
+                    pick = labels[0]
+                    st.session_state.record_pick = pick
+                row = view.iloc[labels.index(pick)]
                 record_key = f"{row['source']}:{row['source_id']}"
                 if st.session_state.get("_llm_record_key") != record_key:
                     st.session_state._llm_record_key = record_key
                     st.session_state.pop("_origination_read", None)
                     st.session_state.pop("_record_answer", None)
 
-                # Score gauge first (ERCOT), then visual stage ladder.
+                # Score (ERCOT) → stage → identity → stitched → ask
                 _render_score_card(row)
                 _render_stage_ladder(row)
 
@@ -1269,34 +1335,25 @@ def main() -> None:
                 )
                 filed = (
                     f"{pd.to_datetime(row['record_date']):%Y-%m-%d}"
-                    if pd.notna(row["record_date"]) else "unknown date"
+                    if pd.notna(row["record_date"]) else "—"
                 )
                 st.markdown(
-                    f"""
-                    <div class="qs-msg">
-                      <p style="font-weight:700;margin:0 0 0.35rem 0;">
-                        {html.escape(str(row['project_name'] or '(unnamed project)'))}
-                      </p>
-                      <p class="qs-msg-meta">
-                        {html.escape(str(row['company'] or 'unknown company'))}
-                        · {html.escape(str(row['county'] or ''))} County
-                      </p>
-                      <p class="qs-msg-meta">
-                        {html.escape(cap)}{html.escape(str(row['kind'] or ''))}
-                        · {html.escape(str(row['status'] or 'status unknown'))}
-                        · filed {filed}
-                      </p>
-                      <p class="qs-msg-meta" style="margin-top:0.35rem;">
-                        `{html.escape(str(row['source']).upper())}`
-                        {html.escape(str(row['source_id']))}
-                        · signal `{html.escape(str(row['stage_signal'] or 'n/a'))}`
-                      </p>
-                    </div>
-                    """,
+                    (
+                        f'<div class="qs-msg">'
+                        f'<p style="font-weight:700;margin:0 0 0.2rem 0;">'
+                        f'{html.escape(str(row["project_name"] or "(unnamed)"))}</p>'
+                        f'<p class="qs-msg-meta">'
+                        f'{html.escape(str(row["company"] or "—"))}'
+                        f' · {html.escape(str(row["county"] or ""))} County</p>'
+                        f'<p class="qs-msg-meta">'
+                        f'{html.escape(cap)}{html.escape(str(row["kind"] or ""))}'
+                        f' · {html.escape(str(row["status"] or "—"))}'
+                        f' · {filed}</p>'
+                        f'</div>'
+                    ),
                     unsafe_allow_html=True,
                 )
 
-                # The stitched story: show the matched record from the other source.
                 linked_rec = None
                 if row.get("match_id"):
                     other = records[
@@ -1306,31 +1363,24 @@ def main() -> None:
                     if len(other):
                         o = other.iloc[0]
                         linked_rec = o.to_dict()
-                        o_filed = (
-                            f"{pd.to_datetime(o['record_date']):%Y-%m-%d}"
-                            if pd.notna(o["record_date"]) else "unknown date"
-                        )
-                        reason = html.escape(
-                            str(row["match_reason"] or "name match in same county")
-                        )
+                        reason = str(row["match_reason"] or "name match in same county")
+                        if len(reason) > 90:
+                            reason = reason[:88] + "…"
                         st.markdown(
-                            f"""
-                            <div class="qs-link-card">
-                              <p class="qs-kicker">Stitched across sources</p>
-                              <p style="margin:0 0 0.35rem 0;font-weight:700;">
-                                {html.escape(str(o['source']).upper())}
-                                {html.escape(str(o['source_id']))}
-                                · {html.escape(str(o['project_name'] or o['company'] or ''))}
-                              </p>
-                              <p style="margin:0;opacity:0.85;">
-                                {html.escape(str(o['company'] or ''))} ·
-                                {html.escape(str(o['status'] or ''))} · filed {o_filed}
-                              </p>
-                              <p style="margin:0.45rem 0 0 0;font-size:0.9rem;opacity:0.75;">
-                                Why linked: {reason}
-                              </p>
-                            </div>
-                            """,
+                            (
+                                f'<div class="qs-link-card">'
+                                f'<p class="qs-kicker">Stitched</p>'
+                                f'<p style="font-weight:700;margin:0 0 0.15rem 0;">'
+                                f'{html.escape(str(o["source"]).upper())} '
+                                f'{html.escape(str(o["source_id"]))}'
+                                f' · {html.escape(str(o["project_name"] or o["company"] or ""))}'
+                                f'</p>'
+                                f'<p class="qs-msg-meta">'
+                                f'{html.escape(str(o["company"] or ""))} · '
+                                f'{html.escape(str(o["status"] or ""))}</p>'
+                                f'<p class="qs-msg-meta">{html.escape(reason)}</p>'
+                                f'</div>'
+                            ),
                             unsafe_allow_html=True,
                         )
 
