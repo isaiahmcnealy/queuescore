@@ -30,9 +30,14 @@ except ImportError:
     pass
 RAW_DIR: Path = DATA_DIR / "raw"
 SNAPSHOT_DIR: Path = DATA_DIR / "snapshots"
+MODELS_DIR: Path = PROJECT_ROOT / "models"
 
 # Filename used by ingest.save_snapshot / load_snapshot for the cached queue.
 ERCOT_SNAPSHOT_NAME: str = "ercot_queue_latest.parquet"
+
+# Camille's shared-feature ERCOT completion model (P(reach signed IA)).
+MODEL_BUNDLE_NAME: str = "queuescore_ercot_shared.joblib"
+MODEL_BUNDLE_PATH: Path = MODELS_DIR / MODEL_BUNDLE_NAME
 
 # --------------------------------------------------------------------------- #
 # Internal feature schema

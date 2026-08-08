@@ -21,6 +21,7 @@ import html
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -29,7 +30,7 @@ import streamlit.components.v1 as components
 # Make `from src import ...` work when launched via `streamlit run src/app.py`.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src import explain, resolve, stage  # noqa: E402
+from src import config, explain, resolve, score_model, stage  # noqa: E402
 from src.sources import load_all  # noqa: E402
 
 
@@ -60,9 +61,8 @@ _STATUS_FALLBACK = PALETTE["ink"]
 
 # Fixed height of the right-hand detail card; long content scrolls inside it
 # instead of stretching the page (keeps the two columns visually aligned).
-DETAIL_PANEL_HEIGHT = 860
+DETAIL_PANEL_HEIGHT = 920
 MAP_HEIGHT = 480
-MAP_HEIGHT_EXPANDED = 560  # when filings drawer is collapsed
 
 _CSS = f"""
 <style>
@@ -167,6 +167,111 @@ _CSS = f"""
   .qs-msg-stage {{
     background: rgba(74, 83, 60, 0.12); border: 1px solid rgba(74, 83, 60, 0.18);
   }}
+  .qs-msg-score {{
+    background: linear-gradient(160deg, rgba(200, 142, 114, 0.16), rgba(74, 83, 60, 0.08));
+    border: 1px solid rgba(200, 142, 114, 0.28);
+    padding: 1rem 0.95rem 0.95rem;
+  }}
+  .qs-gauge-wrap {{
+    display: flex; flex-direction: column; align-items: center; gap: 0.55rem;
+    margin: 0.15rem 0 0.35rem 0;
+  }}
+  .qs-gauge {{
+    position: relative; width: 148px; height: 148px;
+  }}
+  .qs-gauge svg {{ width: 100%; height: 100%; display: block; transform: rotate(-90deg); }}
+  .qs-gauge-track {{ fill: none; stroke: rgba(46, 51, 42, 0.1); stroke-width: 10; }}
+  .qs-gauge-fill {{
+    fill: none; stroke: {PALETTE['terracotta']}; stroke-width: 10;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 700ms ease;
+  }}
+  .qs-gauge-fill.tier-top {{ stroke: {PALETTE['olive']}; }}
+  .qs-gauge-fill.tier-likely {{ stroke: {PALETTE['sage']}; }}
+  .qs-gauge-fill.tier-watch {{ stroke: {PALETTE['terracotta']}; }}
+  .qs-gauge-fill.tier-risk {{ stroke: #A65D4A; }}
+  .qs-gauge-center {{
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    pointer-events: none;
+  }}
+  .qs-gauge-pct {{
+    font-family: Fraunces, Georgia, serif; font-size: 2rem; font-weight: 700;
+    letter-spacing: -0.03em; line-height: 1; color: {PALETTE['ink']}; margin: 0;
+  }}
+  .qs-gauge-tier {{
+    margin: 0.2rem 0 0 0; font-size: 0.78rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: {PALETTE['terracotta']};
+  }}
+  .qs-tier-bar {{
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.28rem;
+    width: 100%; margin: 0.35rem 0 0.15rem 0;
+  }}
+  .qs-tier-seg {{
+    height: 6px; border-radius: 999px; background: rgba(46, 51, 42, 0.1);
+  }}
+  .qs-tier-seg.on {{ background: {PALETTE['olive']}; }}
+  .qs-tier-seg.on-warm {{ background: {PALETTE['terracotta']}; }}
+  .qs-tier-labels {{
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.28rem;
+    width: 100%; font-size: 0.65rem; color: rgba(46, 51, 42, 0.55);
+    text-align: center; font-weight: 600;
+  }}
+  .qs-tier-labels .on {{ color: {PALETTE['ink']}; font-weight: 700; }}
+
+  .qs-funnel {{
+    display: flex; flex-direction: column; gap: 0; margin: 0.35rem 0 0.15rem 0;
+  }}
+  .qs-funnel-step {{
+    display: grid; grid-template-columns: 22px 1fr; gap: 0.65rem;
+    align-items: start; position: relative; min-height: 2.1rem;
+  }}
+  .qs-funnel-step:not(:last-child)::before {{
+    content: ""; position: absolute; left: 10px; top: 18px; bottom: -2px;
+    width: 2px; background: rgba(46, 51, 42, 0.12);
+  }}
+  .qs-funnel-step.done:not(:last-child)::before {{
+    background: {PALETTE['olive']};
+  }}
+  .qs-funnel-step.current:not(:last-child)::before {{
+    background: linear-gradient({PALETTE['olive']}, rgba(46, 51, 42, 0.12));
+  }}
+  .qs-funnel-dot {{
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid rgba(46, 51, 42, 0.18);
+    background: {PALETTE['bg']};
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 700; color: rgba(46, 51, 42, 0.4);
+    z-index: 1;
+  }}
+  .qs-funnel-step.done .qs-funnel-dot {{
+    background: {PALETTE['olive']}; border-color: {PALETTE['olive']}; color: {PALETTE['bg']};
+  }}
+  .qs-funnel-step.current .qs-funnel-dot {{
+    background: {PALETTE['terracotta']}; border-color: {PALETTE['terracotta']};
+    color: {PALETTE['bg']};
+    box-shadow: 0 0 0 4px rgba(200, 142, 114, 0.22);
+    animation: qs-pulse 1.8s ease-out infinite;
+  }}
+  .qs-funnel-label {{
+    font-size: 0.88rem; font-weight: 600; color: rgba(46, 51, 42, 0.45);
+    padding-top: 0.12rem; line-height: 1.25;
+  }}
+  .qs-funnel-step.done .qs-funnel-label {{ color: rgba(46, 51, 42, 0.72); }}
+  .qs-funnel-step.current .qs-funnel-label {{
+    color: {PALETTE['ink']}; font-weight: 700;
+  }}
+  .qs-drivers {{
+    margin: 0.45rem 0 0 0; padding: 0; list-style: none; font-size: 0.86rem;
+  }}
+  .qs-drivers li {{
+    display: flex; justify-content: space-between; gap: 0.75rem;
+    padding: 0.15rem 0; border-bottom: 1px solid rgba(46, 51, 42, 0.06);
+  }}
+  .qs-drivers li:last-child {{ border-bottom: 0; }}
+  .qs-drv-pos {{ color: {PALETTE['olive']}; font-variant-numeric: tabular-nums; }}
+  .qs-drv-neg {{ color: {PALETTE['terracotta']}; font-variant-numeric: tabular-nums; }}
   .qs-msg-meta {{ font-size: 0.88rem; opacity: 0.78; }}
   .qs-drawer-bar {{
     display: flex; align-items: center; justify-content: space-between;
@@ -176,6 +281,29 @@ _CSS = f"""
   .qs-drawer-bar .qs-drawer-title {{
     font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em;
     text-transform: uppercase; color: rgba(46, 51, 42, 0.55); margin: 0;
+  }}
+  /* Filings expander — chevron dropdown instead of a toggle */
+  div[data-testid="stExpander"] {{
+    margin-top: 0.45rem;
+    border: none !important;
+    border-top: 1px solid rgba(46, 51, 42, 0.08) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }}
+  div[data-testid="stExpander"] details {{ border: none !important; }}
+  div[data-testid="stExpander"] summary {{
+    padding: 0.55rem 0.15rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+    color: rgba(46, 51, 42, 0.55) !important;
+  }}
+  div[data-testid="stExpander"] summary:hover {{
+    color: {PALETTE['ink']} !important;
+  }}
+  div[data-testid="stExpander"] summary svg {{
+    stroke: {PALETTE['olive']} !important;
   }}
 
   [data-testid="stPopover"] {{ display: flex; justify-content: flex-end; }}
@@ -306,6 +434,231 @@ def _load_records(refresh: bool) -> tuple[pd.DataFrame, dict]:
 def _label(row: pd.Series) -> str:
     name = row["project_name"] or row["company"] or "unnamed"
     return f"{row['source_id']} · {name[:38]} [{row['source']}]"
+
+
+@st.cache_resource(show_spinner=False)
+def _load_score_bundle():
+    """Load the ERCOT completion model once per process (or None if missing)."""
+    if not config.MODEL_BUNDLE_PATH.exists():
+        return None
+    try:
+        return score_model.load_bundle()
+    except Exception as exc:  # noqa: BLE001
+        # Common on macOS without `brew install libomp`.
+        st.session_state["_score_load_error"] = str(exc)
+        return None
+
+
+@st.cache_data(show_spinner="Scoring ERCOT queue…")
+def _score_ercot_snapshot(_fingerprint: str, ercot: pd.DataFrame) -> pd.DataFrame:
+    """Score the full ERCOT slice (congestion needs the whole snapshot)."""
+    bundle = _load_score_bundle()
+    if bundle is None:
+        return pd.DataFrame()
+    return score_model.score_queue(ercot, bundle)
+
+
+def _ercot_fingerprint(ercot: pd.DataFrame) -> str:
+    cols = ["source_id", "capacity_mw", "kind", "county", "status"]
+    return pd.util.hash_pandas_object(ercot[cols], index=False).sum().__format__("x")
+
+
+def _attach_model_scores(records: pd.DataFrame) -> pd.DataFrame:
+    out = records.copy()
+    out["completion_probability"] = np.nan
+    out["ia_tier"] = ""
+    ercot = out[out["source"] == "ercot"]
+    if ercot.empty or _load_score_bundle() is None:
+        return out
+    scored = _score_ercot_snapshot(_ercot_fingerprint(ercot), ercot.reset_index(drop=True))
+    if scored.empty:
+        return out
+    by_id = scored.set_index(scored["q_id"].astype(str))[
+        ["completion_probability", "ia_tier"]
+    ]
+    sid = ercot["source_id"].astype(str)
+    out.loc[ercot.index, "completion_probability"] = sid.map(by_id["completion_probability"]).values
+    out.loc[ercot.index, "ia_tier"] = sid.map(by_id["ia_tier"]).fillna("").values
+    # Keep scored feature frame for SHAP (full-queue congestion).
+    st.session_state["_ercot_scored"] = scored
+    return out
+
+
+def _drivers_for(row: pd.Series) -> list[tuple[str, float]]:
+    """SHAP drivers for one ERCOT row (cached per source_id in session)."""
+    if row.get("source") != "ercot":
+        return []
+    sid = str(row["source_id"])
+    cache = st.session_state.setdefault("_shap_cache", {})
+    if sid in cache:
+        return cache[sid]
+    bundle = _load_score_bundle()
+    scored = st.session_state.get("_ercot_scored")
+    if bundle is None or scored is None or scored.empty:
+        return []
+    hit = scored[scored["q_id"].astype(str) == sid]
+    if hit.empty:
+        return []
+    drivers = score_model.explain_drivers(hit, bundle, top_k=5)[0]["top_drivers"]
+    cache[sid] = drivers
+    return drivers
+
+
+def _render_score_card(row: pd.Series) -> None:
+    """Prominent P(IA) gauge + tier strip for ERCOT rows."""
+    if row.get("source") != "ercot":
+        return
+    p = row.get("completion_probability")
+    if p is None or (isinstance(p, float) and pd.isna(p)):
+        err = st.session_state.get("_score_load_error")
+        if err:
+            st.caption(f"Completion model unavailable ({err[:120]})")
+        return
+
+    prob = float(p)
+    tier = str(row.get("ia_tier") or score_model.ia_tier(prob))
+    pct_label = f"{prob:.0%}"
+    # SVG circle: r=42 → circumference ≈ 263.89
+    c = 2 * 3.14159265 * 42
+    offset = c * (1.0 - max(0.0, min(1.0, prob)))
+    tier_class = {
+        "Top": "tier-top",
+        "Likely": "tier-likely",
+        "Watch": "tier-watch",
+        "At-risk": "tier-risk",
+    }.get(tier, "tier-watch")
+    tiers = ["At-risk", "Watch", "Likely", "Top"]
+    lit = {"At-risk": 1, "Watch": 2, "Likely": 3, "Top": 4}.get(tier, 2)
+    segs = []
+    labels = []
+    for i, name in enumerate(tiers, start=1):
+        on = i <= lit
+        warm = on and tier in ("Watch", "At-risk") and i == lit
+        cls = "on-warm" if warm else ("on" if on else "")
+        segs.append(f'<div class="qs-tier-seg {cls}"></div>')
+        labels.append(
+            f'<span class="{"on" if name == tier else ""}">{html.escape(name)}</span>'
+        )
+
+    # Keep HTML flush-left — indented lines become markdown code blocks.
+    st.markdown(
+        (
+            f'<div class="qs-msg qs-msg-score">'
+            f'<p class="qs-kicker" style="font-size:0.72rem;letter-spacing:0.08em;'
+            f'text-transform:uppercase;font-weight:700;color:{PALETTE["terracotta"]};'
+            f'margin:0 0 0.15rem 0;text-align:center;">Completion outlook</p>'
+            f'<div class="qs-gauge-wrap">'
+            f'<div class="qs-gauge">'
+            f'<svg viewBox="0 0 100 100" aria-hidden="true">'
+            f'<circle class="qs-gauge-track" cx="50" cy="50" r="42"></circle>'
+            f'<circle class="qs-gauge-fill {tier_class}" cx="50" cy="50" r="42" '
+            f'stroke-dasharray="{c:.2f}" stroke-dashoffset="{offset:.2f}"></circle>'
+            f'</svg>'
+            f'<div class="qs-gauge-center">'
+            f'<p class="qs-gauge-pct">{html.escape(pct_label)}</p>'
+            f'<p class="qs-gauge-tier">{html.escape(tier)}</p>'
+            f'</div></div>'
+            f'<div class="qs-tier-bar">{"".join(segs)}</div>'
+            f'<div class="qs-tier-labels">{"".join(labels)}</div>'
+            f'</div>'
+            f'<p class="qs-msg-meta" style="text-align:center;margin-top:0.45rem;">'
+            f'Model P(reach signed Interconnection Agreement)</p>'
+            f'</div>'
+        ),
+        unsafe_allow_html=True,
+    )
+    sid = str(row["source_id"])
+    show = st.session_state.get("_shap_shown") == sid
+    if st.button(
+        "Hide drivers" if show else "Why this score",
+        key=f"btn_shap_{sid}",
+    ):
+        st.session_state._shap_shown = None if show else sid
+        st.rerun()
+    if st.session_state.get("_shap_shown") != sid:
+        return
+    try:
+        with st.spinner("Computing drivers…"):
+            drivers = _drivers_for(row)
+    except Exception as exc:  # noqa: BLE001
+        st.caption(f"Drivers unavailable ({str(exc)[:100]})")
+        return
+    if not drivers:
+        st.caption("No drivers for this filing.")
+        return
+    items = []
+    for feat, val in drivers:
+        label = html.escape(score_model.FEATURE_LABELS.get(feat, feat))
+        cls = "qs-drv-pos" if val >= 0 else "qs-drv-neg"
+        sign = "+" if val >= 0 else ""
+        items.append(
+            f'<li><span>{label}</span>'
+            f'<span class="{cls}">{sign}{val:.2f}</span></li>'
+        )
+    st.markdown(
+        f'<ul class="qs-drivers">{"".join(items)}</ul>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_stage_ladder(row: pd.Series) -> None:
+    """Visual funnel showing where this filing sits on the stage ladder."""
+    source = str(row.get("source") or "")
+    try:
+        rank = int(row.get("stage_rank", 0))
+    except (TypeError, ValueError):
+        rank = 0
+
+    if source == "ercot":
+        steps = [
+            (0, "Early planning"),
+            (1, "Engineering studies"),
+            (2, "Studies complete"),
+            (3, "Grid agreement signed"),
+        ]
+    else:
+        steps = [
+            (0, "Status unclear"),
+            (1, "Application filed"),
+            (2, "Permit issued"),
+        ]
+
+    items = []
+    last_rank = steps[-1][0]
+    for step_rank, label in steps:
+        if step_rank < rank:
+            state, mark = "done", "✓"
+        elif step_rank == rank:
+            # Terminal stage (e.g. IA signed) reads as complete, not "step 4".
+            state = "current"
+            mark = "✓" if step_rank == last_rank else str(step_rank + 1)
+        else:
+            state, mark = "", str(step_rank + 1)
+        items.append(
+            f'<div class="qs-funnel-step {state}">'
+            f'<div class="qs-funnel-dot">{mark}</div>'
+            f'<div class="qs-funnel-label">{html.escape(label)}</div>'
+            f'</div>'
+        )
+
+    conf = html.escape(str(row.get("stage_confidence") or ""))
+    ev = html.escape(str(row.get("stage_evidence") or ""))
+    conf_icon = {"high": "●", "medium": "◐", "low": "○"}.get(
+        str(row.get("stage_confidence") or ""), "○"
+    )
+    st.markdown(
+        (
+            f'<div class="qs-msg qs-msg-stage">'
+            f'<p class="qs-kicker" style="font-size:0.72rem;letter-spacing:0.08em;'
+            f'text-transform:uppercase;font-weight:700;color:{PALETTE["olive"]};'
+            f'margin:0 0 0.45rem 0;">Development stage</p>'
+            f'<div class="qs-funnel">{"".join(items)}</div>'
+            f'<p class="qs-msg-meta" style="margin-top:0.55rem;">'
+            f'{conf_icon} {conf} confidence — {ev}</p>'
+            f'</div>'
+        ),
+        unsafe_allow_html=True,
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -506,6 +859,9 @@ def main() -> None:
     # Stage inference (M4): funnel position + confidence + evidence per record.
     records = stage.annotate_stages(records)
 
+    # Completion model: P(reach signed IA) for ERCOT rows (LBNL-trained XGB).
+    records = _attach_model_scores(records)
+
     stamps = " · ".join(
         f"{name.upper()} {ts:%b %d %H:%M}" if ts else f"{name.upper()} never"
         for name, ts in fresh.items()
@@ -578,8 +934,7 @@ def main() -> None:
                 default="Overview", label_visibility="collapsed",
             )
 
-            show_filings = st.session_state.get("show_filings", True)
-            map_h = MAP_HEIGHT if show_filings else MAP_HEIGHT_EXPANDED
+            map_h = MAP_HEIGHT
 
             if mode == "Site view" and focus is not None:
                 _site_view(focus, focus_pt)
@@ -620,20 +975,11 @@ def main() -> None:
                                 st.session_state._last_table_sel = None
                                 st.rerun()
 
-            # Filings drawer — same container as the map, collapsible
-            d_left, d_right = st.columns([4, 1], vertical_alignment="center")
-            d_left.markdown(
-                f'<div class="qs-drawer-bar"><p class="qs-drawer-title">'
-                f'Filings · {len(view):,}</p></div>',
-                unsafe_allow_html=True,
-            )
-            show_filings = d_right.toggle(
-                "List",
-                value=st.session_state.get("show_filings", True),
-                key="show_filings",
-                help="Show or hide the filings table under the map.",
-            )
-            if show_filings:
+            # Filings — chevron expander (not a toggle)
+            with st.expander(
+                f"Filings · {len(view):,}",
+                expanded=True,
+            ):
                 t_head, t_info = st.columns([9, 1], vertical_alignment="center")
                 t_head.caption(
                     "Click a row to select · same project can appear twice until stitched"
@@ -642,7 +988,8 @@ def main() -> None:
                     _schema_help()
                 table = view[
                     ["source", "source_id", "project_name", "company", "county",
-                     "kind", "stage", "status", "capacity_mw", "record_date"]
+                     "kind", "stage", "status", "capacity_mw",
+                     "completion_probability", "record_date"]
                 ]
                 event = st.dataframe(
                     table,
@@ -663,6 +1010,12 @@ def main() -> None:
                         "status": st.column_config.TextColumn("Status", width="small"),
                         "capacity_mw": st.column_config.NumberColumn(
                             "MW", format="%.0f", width="small"
+                        ),
+                        "completion_probability": st.column_config.NumberColumn(
+                            "P(IA)",
+                            help="Model P(reach signed Interconnection Agreement). ERCOT only.",
+                            format="%.0%",
+                            width="small",
                         ),
                         "record_date": st.column_config.DateColumn("Filed", width="small"),
                     },
@@ -712,24 +1065,9 @@ def main() -> None:
                     st.session_state.pop("_origination_read", None)
                     st.session_state.pop("_record_answer", None)
 
-                conf_icon = {"high": "🟢", "medium": "🟡", "low": "⚪"}.get(
-                    row["stage_confidence"], "⚪"
-                )
-                stage_name = html.escape(str(row["stage"] or "—"))
-                stage_ev = html.escape(str(row["stage_evidence"] or ""))
-                st.markdown(
-                    f"""
-                    <div class="qs-msg qs-msg-stage">
-                      <p style="font-weight:700;font-size:1.05rem;margin:0 0 0.25rem 0;">
-                        {stage_name}
-                      </p>
-                      <p class="qs-msg-meta">{conf_icon}
-                        {html.escape(str(row['stage_confidence']))} confidence
-                        — {stage_ev}</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                # Score gauge first (ERCOT), then visual stage ladder.
+                _render_score_card(row)
+                _render_stage_ladder(row)
 
                 cap = (
                     f"{row['capacity_mw']:.0f} MW · "
