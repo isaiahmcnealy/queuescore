@@ -29,7 +29,7 @@ import streamlit.components.v1 as components
 # Make `from src import ...` work when launched via `streamlit run src/app.py`.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src import explain  # noqa: E402
+from src import explain, resolve  # noqa: E402
 from src.sources import load_all  # noqa: E402
 
 
@@ -207,11 +207,25 @@ def main() -> None:
     col_btn, col_status = st.columns([1, 3])
     refresh = col_btn.button("Refresh data")
     records, fresh = _load_records(refresh=refresh)
+
+    # Cross-source matching: link ERCOT queue entries to their TCEQ permits
+    # (match table produced by `python -m src.resolve`; snapshot-cached).
+    matches = resolve.load_matches()
+    if matches is not None and len(matches):
+        records = resolve.link_records(records, matches)
+        n_links = len(matches)
+    else:
+        records = records.assign(match_id="", match_reason="")
+        n_links = 0
+
     stamps = " · ".join(
         f"**{name.upper()}** {ts:%b %d %H:%M}" if ts else f"**{name.upper()}** never"
         for name, ts in fresh.items()
     )
-    col_status.markdown(f"🟢 {len(records):,} records · last updated: {stamps}")
+    col_status.markdown(
+        f"🟢 {len(records):,} records · 🔗 {n_links} cross-source links · "
+        f"last updated: {stamps}"
+    )
 
     # Filters (the on-thesis lens lives here)
     fcol1, fcol2, fcol3 = st.columns([2, 1, 1])
@@ -345,6 +359,26 @@ def main() -> None:
                     f"Stage signal: `{row['stage_signal'] or 'n/a'}` · "
                     f"ref `{row['link_id'] or row['source_id']}`"
                 )
+
+                # The stitched story: show the matched record from the other source.
+                if row.get("match_id"):
+                    other = records[
+                        (records["source"] != row["source"])
+                        & (records["source_id"] == row["match_id"])
+                    ]
+                    st.write("**🔗 Linked record (cross-source match)**")
+                    if len(other):
+                        o = other.iloc[0]
+                        o_filed = (
+                            f"{pd.to_datetime(o['record_date']):%Y-%m-%d}"
+                            if pd.notna(o["record_date"]) else "unknown date"
+                        )
+                        st.markdown(
+                            f"`{o['source'].upper()}` **{o['source_id']}** · "
+                            f"{o['project_name'] or o['company']}\n\n"
+                            f"{o['company']} · {o['status']} · filed {o_filed}\n\n"
+                            f"_Why linked:_ {row['match_reason'] or 'name match in same county'}"
+                        )
 
                 st.write("**Origination read**")
                 _render_verdict(explain.explain_record(row.to_dict()))

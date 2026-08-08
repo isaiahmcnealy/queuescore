@@ -132,8 +132,17 @@ def _env_bool(name: str, default: bool) -> bool:
 
 DRY_RUN: bool = _env_bool("DRY_RUN", True)
 
-# Model used by explain.py when DRY_RUN is False.
-ANTHROPIC_MODEL: str = "claude-opus-4-8"
+# Models are configurable via .env without code edits; defaults below.
+# ANTHROPIC_MODEL: user-facing verdicts/Q&A (quality matters, low volume).
+ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-opus-4-8")
+
+# MATCH_MODEL: high-volume match adjudication in resolve.py — simple yes/no
+# classification, so Haiku ($1/$5 per MTok vs $5/$25) is plenty.
+MATCH_MODEL: str = os.getenv("MATCH_MODEL", "claude-haiku-4-5")
+
+# Cap on ambiguous pairs sent to Claude per run (token guardrail while
+# testing live; verdicts are disk-cached so reruns cost nothing).
+MATCH_MAX_CLAUDE_PAIRS: int = 60
 
 # Seed for DummyScorer so leaderboard output is stable across reruns.
 RANDOM_SEED: int = 42
