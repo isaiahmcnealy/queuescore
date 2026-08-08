@@ -44,6 +44,29 @@ QA_USER_TEMPLATE: str = (
     "Question: {question}"
 )
 
+RECORD_VERDICT_SYSTEM_PROMPT: str = (
+    "You are Project Radar, an origination analyst for Texas power projects. "
+    "Given one record from a public source (ERCOT interconnection queue or a "
+    "TCEQ air permit), explain in two or three sentences what it signals about "
+    "the project's momentum and whether it's worth a business-development "
+    "conversation now. Be concrete and honest about uncertainty."
+)
+
+RECORD_VERDICT_TEMPLATE: str = (
+    "Source: {source}\nRecord ID: {source_id}\nProject: {project_name}\n"
+    "Company: {company}\nCounty: {county}\nType: {kind}\n"
+    "Status: {status}\nStage signal: {stage_signal}\n"
+    "Capacity (MW): {capacity_mw}\nRecord date: {record_date}\n\n"
+    "What does this record signal for deal origination?"
+)
+
+_CANNED_RECORD_VERDICT: str = (
+    "[DRY_RUN] Placeholder read: this record's status and stage signal suggest "
+    "an active project worth tracking. Set DRY_RUN=False (and an "
+    "ANTHROPIC_API_KEY) for a real origination read from Claude."
+)
+
+
 # Canned responses used when DRY_RUN is on.
 _CANNED_VERDICT: str = (
     "[DRY_RUN] This project scores moderately. Size and technology are the main "
@@ -81,6 +104,19 @@ def explain_project(
         attributions=_format_attributions(attributions),
     )
     return _call_claude(VERDICT_SYSTEM_PROMPT, prompt)
+
+
+def explain_record(record: dict) -> str:
+    """Plain-English origination read on one unified-schema record."""
+    if config.DRY_RUN:
+        return _CANNED_RECORD_VERDICT
+    prompt = RECORD_VERDICT_TEMPLATE.format(
+        **{k: record.get(k, "?") for k in (
+            "source", "source_id", "project_name", "company", "county",
+            "kind", "status", "stage_signal", "capacity_mw", "record_date",
+        )}
+    )
+    return _call_claude(RECORD_VERDICT_SYSTEM_PROMPT, prompt)
 
 
 def answer_question(question: str, scored: pd.DataFrame) -> str:
