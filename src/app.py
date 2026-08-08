@@ -81,6 +81,9 @@ _CSS = f"""
   }}
   .verdict-box p {{ margin: 0 0 0.6rem 0; line-height: 1.5; }}
   .verdict-box p:last-child {{ margin-bottom: 0; }}
+  /* schema-legend ℹ️: flush right, compact, centered on the card header row */
+  [data-testid="stPopover"] {{ display: flex; justify-content: flex-end; }}
+  [data-testid="stPopover"] > button {{ padding: 0.15rem 0.55rem; }}
   [data-testid="stToolbar"], #MainMenu, footer {{ visibility: hidden; }}
 </style>
 """
@@ -416,7 +419,7 @@ def main() -> None:
     # Panel 2: records table (click a row to select)
     with left:
         with st.container(border=True):
-            rec_head, rec_info = st.columns([3, 1])
+            rec_head, rec_info = st.columns([9, 1], vertical_alignment="center")
             rec_head.subheader("Records")
             with rec_info:
                 _schema_help()
