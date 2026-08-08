@@ -29,7 +29,7 @@ import streamlit.components.v1 as components
 # Make `from src import ...` work when launched via `streamlit run src/app.py`.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src import explain, resolve  # noqa: E402
+from src import explain, resolve, stage  # noqa: E402
 from src.sources import load_all  # noqa: E402
 
 
@@ -218,6 +218,9 @@ def main() -> None:
         records = records.assign(match_id="", match_reason="")
         n_links = 0
 
+    # Stage inference (M4): funnel position + confidence + evidence per record.
+    records = stage.annotate_stages(records)
+
     stamps = " · ".join(
         f"**{name.upper()}** {ts:%b %d %H:%M}" if ts else f"**{name.upper()}** never"
         for name, ts in fresh.items()
@@ -267,7 +270,7 @@ def main() -> None:
             )
             table = view[
                 ["source", "source_id", "project_name", "company", "county",
-                 "kind", "status", "capacity_mw", "record_date"]
+                 "kind", "stage", "status", "capacity_mw", "record_date"]
             ]
             event = st.dataframe(
                 table,
@@ -284,6 +287,7 @@ def main() -> None:
                     "company": st.column_config.TextColumn("Company"),
                     "county": st.column_config.TextColumn("County"),
                     "kind": st.column_config.TextColumn("Type"),
+                    "stage": st.column_config.TextColumn("Stage"),
                     "status": st.column_config.TextColumn("Status"),
                     "capacity_mw": st.column_config.NumberColumn("MW", format="%.0f"),
                     "record_date": st.column_config.DateColumn("Filed"),
@@ -346,7 +350,14 @@ def main() -> None:
                     # next row click is applied even if it's the previously highlighted row.
                     st.session_state._last_table_sel = None
                 row = view.iloc[labels.index(choice)]
-                st.metric("Status", row["status"] or "—")
+                st.metric("Stage", row["stage"])
+                conf_icon = {"high": "🟢", "medium": "🟡", "low": "⚪"}.get(
+                    row["stage_confidence"], "⚪"
+                )
+                st.caption(
+                    f"{conf_icon} {row['stage_confidence']} confidence — "
+                    f"{row['stage_evidence']}"
+                )
                 cap = f"{row['capacity_mw']:.0f} MW · " if pd.notna(row["capacity_mw"]) else ""
                 filed = (
                     f"{pd.to_datetime(row['record_date']):%Y-%m-%d}"
@@ -355,7 +366,7 @@ def main() -> None:
                 st.markdown(
                     f"**{row['project_name'] or '(unnamed project)'}**\n\n"
                     f"{row['company'] or 'unknown company'} · {row['county']} County\n\n"
-                    f"{cap}{row['kind']} · filed {filed}\n\n"
+                    f"{cap}{row['kind']} · {row['status'] or 'status unknown'} · filed {filed}\n\n"
                     f"Stage signal: `{row['stage_signal'] or 'n/a'}` · "
                     f"ref `{row['link_id'] or row['source_id']}`"
                 )
