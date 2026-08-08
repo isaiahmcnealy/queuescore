@@ -76,7 +76,8 @@ _CSS = f"""
       {PALETTE['bg']};
   }}
   .block-container {{ padding-top: 1.2rem; padding-bottom: 1.5rem; max-width: 1600px; }}
-  h1, .qs-brand {{
+  h1, .qs-brand, p.qs-brand,
+  div[data-testid="stMarkdownContainer"] p.qs-brand {{
     font-family: Fraunces, Georgia, serif !important;
     letter-spacing: -0.03em; font-weight: 700; color: {PALETTE['ink']};
   }}
@@ -115,10 +116,16 @@ _CSS = f"""
     gap: 1rem 1.5rem; margin: 0.2rem 0 0.85rem 0;
     animation: qs-fade-up 380ms ease both;
   }}
-  .qs-brand {{ font-size: 2.2rem; line-height: 1.05; margin: 0; }}
-  .qs-tagline {{
-    margin: 0.35rem 0 0 0; max-width: 34rem; color: rgba(46, 51, 42, 0.72);
-    font-size: 1.0rem; line-height: 1.35;
+  .qs-brand, p.qs-brand,
+  div[data-testid="stMarkdownContainer"] p.qs-brand {{
+    font-size: 3.1rem !important;
+    line-height: 1.02 !important;
+    margin: 0 !important;
+  }}
+  .qs-tagline, p.qs-tagline,
+  div[data-testid="stMarkdownContainer"] p.qs-tagline {{
+    margin: 0.35rem 0 0 0 !important; max-width: 34rem; color: rgba(46, 51, 42, 0.72);
+    font-size: 1.05rem !important; line-height: 1.35 !important;
   }}
   /* Hero: brand | tight status cluster */
   div[data-testid="stHorizontalBlock"]:has(.qs-hero-mark) {{
@@ -562,7 +569,8 @@ def _hero(n_records: int, n_links: int, stamps: str, stamps_help: str) -> bool:
         st.markdown(
             (
                 '<div class="qs-hero-mark"></div>'
-                '<p class="qs-brand">QueueScore</p>'
+                '<p class="qs-brand" style="font-size:3.1rem;line-height:1.02;margin:0;">'
+                'QueueScore</p>'
                 '<p class="qs-tagline">'
                 "Live Texas power origination — ERCOT queue + TCEQ permits"
                 "</p>"
