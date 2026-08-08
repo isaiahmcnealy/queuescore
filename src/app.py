@@ -82,6 +82,48 @@ def _inject_css() -> None:
     st.markdown(_CSS, unsafe_allow_html=True)
 
 
+def _schema_help() -> None:
+    """ℹ️ popover: what a row is, where fields come from, and the stage ladder."""
+    with st.popover("ℹ️ About this data", use_container_width=False):
+        st.markdown(
+            """
+**One row = one public filing, not one project.** The same project can appear
+once per source until matching links them (🔗).
+
+**Sources**
+
+| Src | What the filing is |
+|---|---|
+| `ercot` | ERCOT interconnection queue entry — a request to connect a plant to the grid |
+| `tceq` | TCEQ air permit (Air New Source Review) — permission to emit; gas plants need one |
+
+**Columns**
+
+| Column | Meaning |
+|---|---|
+| ID | The filing's number in its source (ERCOT queue ID / TCEQ permit #) |
+| Project | Project or site name as filed |
+| Company | Who filed it (ERCOT "Interconnecting Entity" / TCEQ permit holder) |
+| County | Texas county — also the key used for cross-source matching |
+| Type | Generation type (ERCOT) or industry description (TCEQ) |
+| Stage | **Computed by QueueSense** — funnel position inferred from the signals below |
+| Status | The source's own status word (Active/Completed · NEW APPLICATION/ISSUED PERMIT) |
+| MW | Plant size — ERCOT only; permits don't state capacity |
+| Filed | Date it entered the queue / permit date |
+
+**Computed, not in the sources**
+
+- **Stage + confidence + evidence** — read from the ERCOT study phase, the
+  grid-agreement (IA) date, and the permit status. Ladder:
+  *Early planning → Engineering studies → Studies complete → Grid agreement
+  signed* (ERCOT) · *Permit application filed → Permit issued* (TCEQ).
+- **🔗 Cross-source links** — same project found in both sources (name
+  similarity + Claude adjudication); every link stores its reason.
+- **ERCOT coordinates** — inherited from the matched permit (ERCOT publishes none).
+            """
+        )
+
+
 def _render_verdict(text: str) -> None:
     """Render the Claude read as a thematic callout (escaped; paragraphs kept)."""
     paras = [html.escape(p.strip()) for p in text.split("\n\n") if p.strip()]
@@ -263,7 +305,10 @@ def main() -> None:
     # Panel 2: records table (click a row to select)
     with left:
         with st.container(border=True):
-            st.subheader("Records")
+            rec_head, rec_info = st.columns([3, 1])
+            rec_head.subheader("Records")
+            with rec_info:
+                _schema_help()
             st.caption(
                 f"{len(view):,} shown — click a row to select it (updates the detail pane). "
                 "Same project can appear in both sources until matching links them."
