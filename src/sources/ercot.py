@@ -1,7 +1,7 @@
-"""ERCOT interconnection-queue ingestion for QueueSense.
+"""ERCOT interconnection-queue ingestion for QueueScore.
 
 Wraps ``gridstatus.Ercot().get_interconnection_queue()`` (same live source the
-QueueSense skeleton used) but keeps the columns Radar needs that the old
+QueueScore skeleton used) but keeps the columns Radar needs that the old
 mapping dropped: Project Name, Interconnecting Entity (the company — our match
 key), and GIM Study Phase / IA Signed (the stage signals).
 """

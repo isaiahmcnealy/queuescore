@@ -1,4 +1,4 @@
-"""Data sources for QueueSense.
+"""Data sources for QueueScore.
 
 Each source module exposes ``fetch_*`` (live pull, saves a snapshot) and
 normalizes into the unified record schema below, so everything downstream

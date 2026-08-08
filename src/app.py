@@ -1,4 +1,4 @@
-"""QueueSense — Streamlit app.
+"""QueueScore — Streamlit app.
 
 Live origination intelligence for Texas power projects. Runs against the REAL
 unified record table (ERCOT interconnection queue + TCEQ power-generation air
@@ -117,7 +117,7 @@ once per source until matching links them (🔗).
 | Company | Who filed it (ERCOT "Interconnecting Entity" / TCEQ permit holder) |
 | County | Texas county — also the key used for cross-source matching |
 | Type | Generation type (ERCOT) or industry description (TCEQ) |
-| Stage | **Computed by QueueSense** — funnel position inferred from the signals below |
+| Stage | **Computed by QueueScore** — funnel position inferred from the signals below |
 | Status | The source's own status word (Active/Completed · NEW APPLICATION/ISSUED PERMIT) |
 | MW | Plant size — ERCOT only; permits don't state capacity |
 | Filed | Date it entered the queue / permit date |
@@ -337,9 +337,9 @@ def _site_view(
 # App
 # --------------------------------------------------------------------------- #
 def main() -> None:
-    st.set_page_config(page_title="QueueSense", page_icon="📡", layout="wide")
+    st.set_page_config(page_title="QueueScore", page_icon="📡", layout="wide")
     _inject_css()
-    st.title("QueueSense")
+    st.title("QueueScore")
     st.caption(
         "Live origination intelligence for Texas power projects — "
         "ERCOT interconnection queue + TCEQ air permits in one view."

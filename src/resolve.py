@@ -1,4 +1,4 @@
-"""Cross-source matching (the judged hard part of QueueSense).
+"""Cross-source matching (the judged hard part of QueueScore).
 
 Links ERCOT queue entries to TCEQ air permits that belong to the same real
 project, in a three-stage funnel — cheap to expensive:

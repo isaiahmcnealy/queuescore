@@ -1,4 +1,4 @@
-# Sources — QueueSense (Track 1)
+# Sources — QueueScore (Track 1)
 
 Recon for the Candid hackathon (Sat 8/8/2026). Two public sources form the spine;
 we join them by entity resolution and infer each project's funnel stage.

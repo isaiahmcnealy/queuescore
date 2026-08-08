@@ -1,1 +1,1 @@
-"""QueueSense source package."""
+"""QueueScore source package."""

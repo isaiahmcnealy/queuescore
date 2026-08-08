@@ -1,4 +1,4 @@
-"""Central configuration for QueueSense.
+"""Central configuration for QueueScore.
 
 Every constant, path, and column mapping lives here so the rest of the codebase
 never hardcodes a path or a magic column name. Two mapping dicts translate the

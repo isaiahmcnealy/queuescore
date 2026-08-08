@@ -1,4 +1,4 @@
-# QueueSense — Charter
+# QueueScore — Charter
 
 Origination intelligence for the Texas power pipeline. Built for the Candid
 Intelligence hackathon (Sat 8/8/2026), Track 1.

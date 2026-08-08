@@ -6,7 +6,7 @@ reverse-engineered from the app bundle — see SOURCES.md for the full recon.
 
 We pull Air New Source Review (AIRNSR) permits filtered server-side by the
 keyword "electric power generation" (~2k records ≈ 4 requests), which is
-exactly the power-plant slice QueueSense cares about. A NEW APPLICATION
+exactly the power-plant slice QueueScore cares about. A NEW APPLICATION
 air permit for a gas plant is one of the earliest public signals a project
 is real.
 """
