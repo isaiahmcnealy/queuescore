@@ -22,6 +22,7 @@ from pathlib import Path
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 
 # Make `from src import ...` work when launched via `streamlit run src/app.py`.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -35,16 +36,22 @@ from src.scorer import DummyScorer, ScoreResult  # noqa: E402
 # Demo data (stand-in until features.build_features is implemented)
 # --------------------------------------------------------------------------- #
 def _demo_queue() -> pd.DataFrame:
-    """A tiny model-ready frame so every panel renders before real data exists."""
+    """A tiny model-ready frame so every panel renders before real data exists.
+
+    ``lat``/``lon`` are placeholder Houston-area coordinates so the map and the
+    satellite site view share one source of truth. Day-of, real coordinates come
+    from TCEQ (``aiLatDecCoord``/``aiLongDecCoord``); ERCOT rows without a permit
+    match fall back to county centroids.
+    """
     rows = [
-        ("ERC-1001", 150.0, "Solar", "Harris", 2022, 640, "large"),
-        ("ERC-1002", 20.0, "Battery", "Travis", 2023, 275, "small"),
-        ("ERC-1003", 300.0, "Wind", "Nolan", 2021, 1010, "large"),
-        ("ERC-1004", 75.0, "Solar", "Pecos", 2023, 190, "medium"),
-        ("ERC-1005", 600.0, "Gas", "Bexar", 2020, 1400, "xlarge"),
-        ("ERC-1006", 45.0, "Battery", "Webb", 2024, 90, "medium"),
+        ("ERC-1001", 150.0, "Solar", "Harris", 2022, 640, "large", 29.88, -95.65),
+        ("ERC-1002", 20.0, "Battery", "Travis", 2023, 275, "small", 29.52, -95.46),
+        ("ERC-1003", 300.0, "Wind", "Nolan", 2021, 1010, "large", 30.00, -95.28),
+        ("ERC-1004", 75.0, "Solar", "Pecos", 2023, 190, "medium", 29.40, -95.10),
+        ("ERC-1005", 600.0, "Gas", "Bexar", 2020, 1400, "xlarge", 30.12, -94.92),
+        ("ERC-1006", 45.0, "Battery", "Webb", 2024, 90, "medium", 29.64, -95.82),
     ]
-    return pd.DataFrame(rows, columns=FEATURE_FRAME_COLUMNS)
+    return pd.DataFrame(rows, columns=[*FEATURE_FRAME_COLUMNS, "lat", "lon"])
 
 
 def _score_to_frame(features: pd.DataFrame, result: ScoreResult) -> pd.DataFrame:
@@ -148,58 +155,88 @@ def _render_verdict(text: str) -> None:
 # --------------------------------------------------------------------------- #
 # Panels
 # --------------------------------------------------------------------------- #
-def _county_map_stub(scored: pd.DataFrame) -> go.Figure:
-    """Plotly Texas county map STUB.
+def _overview_map(scored: pd.DataFrame, focus: pd.Series) -> go.Figure:
+    """Interactive overview map on a labeled street basemap (keyless Carto tiles).
 
-    Day-of: swap for a real county-level choropleth keyed on Texas FIPS codes.
-    Today it scatters the demo projects in a small cluster around Houston so the
-    panel is live and wired to the scored frame.
+    Real roads, towns, and water make it obvious where each project sits — no
+    API key needed. Centered on the currently selected project (with a
+    terracotta halo) so flipping to Site view keeps the same location.
     """
-    # Houston (Harris County). Demo points fan out in a small deterministic
-    # cluster around it — placeholder geography until real FIPS coords land.
-    houston_lon, houston_lat = -95.37, 29.76
-    n = len(scored)
-    lon = [houston_lon + (i - (n - 1) / 2) * 0.18 for i in range(n)]
-    lat = [houston_lat + (0.12 if i % 2 else -0.12) * (1 + i // 2) for i in range(n)]
-
-    fig = go.Figure(
-        go.Scattergeo(
-            lon=lon,
-            lat=lat,
-            text=scored["queue_id"] + " · " + (scored["completion_probability"] * 100).round().astype(int).astype(str) + "%",
-            marker=dict(
-                size=(scored["capacity_mw"] / 10).clip(6, 40),
-                color=scored["completion_probability"],
-                colorscale=PROB_COLORSCALE,
-                colorbar=dict(title="P(complete)", outlinewidth=0),
-                line=dict(color=PALETTE["bg"], width=1.5),
-                cmin=0,
-                cmax=1,
-            ),
+    hover = (
+        scored["queue_id"] + " · " + scored["generation_type"]
+        + "<br>" + scored["county"] + " County · "
+        + scored["capacity_mw"].round(0).astype(int).astype(str) + " MW · "
+        + (scored["completion_probability"] * 100).round().astype(int).astype(str) + "%"
+    )
+    fig = go.Figure()
+    # Halo under the selected project so the eye lands on it immediately.
+    fig.add_trace(
+        go.Scattermap(
+            lon=[float(focus["lon"])],
+            lat=[float(focus["lat"])],
             mode="markers",
+            marker=dict(size=36, color=PALETTE["terracotta"], opacity=0.45),
+            hoverinfo="skip",
         )
     )
-    fig.update_geos(
-        scope="usa",
-        center=dict(lon=houston_lon, lat=houston_lat),
-        projection_scale=9,
-        showland=True,
-        landcolor=PALETTE["land"],
-        showlakes=False,
-        subunitcolor=PALETTE["sage"],
-        countrycolor=PALETTE["sage"],
-        coastlinecolor=PALETTE["sage"],
-        bgcolor="rgba(0,0,0,0)",
+    fig.add_trace(
+        go.Scattermap(
+            lon=scored["lon"],
+            lat=scored["lat"],
+            mode="markers",
+            text=hover,
+            hoverinfo="text",
+            marker=dict(
+                size=(scored["capacity_mw"] / 18).clip(10, 34),
+                color=scored["completion_probability"],
+                colorscale=PROB_COLORSCALE,
+                cmin=0,
+                cmax=1,
+                colorbar=dict(title="P(complete)", outlinewidth=0),
+            ),
+        )
     )
-    # No in-figure title — the caption lives in the Streamlit layout (see main)
-    # so it can't be clipped by the chart container.
     fig.update_layout(
+        map=dict(
+            style="carto-positron",  # light, labeled, palette-friendly; keyless
+            center=dict(lat=float(focus["lat"]), lon=float(focus["lon"])),
+            zoom=8.7,  # metro scale — same "relative location" the Site view zooms into
+        ),
+        autosize=True,
         margin=dict(l=0, r=0, t=0, b=0),
         height=360,
+        showlegend=False,
         paper_bgcolor="rgba(0,0,0,0)",
         font=dict(color=PALETTE["ink"]),
     )
     return fig
+
+
+def _site_view(row: pd.Series) -> None:
+    """Interactive satellite view of one project's site (keyless Google embed).
+
+    Lets the user eyeball the actual land — empty field vs. active construction
+    is an origination signal. Uses the classic keyless Google Maps embed
+    (``t=k`` = satellite); needs network, so we degrade with a caption offline.
+    Day-of upgrade path: Mapbox satellite basemap on the overview map itself,
+    and/or Google Static/Embed API with a key for SLA. See ROADMAP.md.
+    """
+    lat, lon = float(row["lat"]), float(row["lon"])
+    maps_url = f"https://www.google.com/maps/@{lat},{lon},900m/data=!3m1!1e3"
+    embed = (
+        f"https://maps.google.com/maps?q={lat},{lon}&t=k&z=16&output=embed"
+    )
+    components.html(
+        f'<iframe src="{embed}" width="100%" height="340" frameborder="0" '
+        f'style="border:0; border-radius:12px;" loading="lazy" '
+        f'referrerpolicy="no-referrer-when-downgrade"></iframe>',
+        height=348,
+    )
+    st.caption(
+        f"Site view: **{row['queue_id']}** · {row['county']} County · "
+        f"[open in Google Maps]({maps_url}) — coordinates are placeholders until "
+        f"real TCEQ coords land (demo mode)."
+    )
 
 
 def main() -> None:
@@ -221,6 +258,12 @@ def main() -> None:
     col_status.markdown(f"**Data source:** {badge}")
 
     scored = _score_to_frame(features, DummyScorer().score(features))
+
+    # Shared focus: the project picked in the detail pane (selectbox key
+    # "project_pick"; session_state carries it across reruns). Both Geography
+    # views center here, so Overview ⇄ Site view stay on the same location.
+    pick = st.session_state.get("project_pick", scored["queue_id"].iloc[0])
+    focus = scored[scored["queue_id"] == pick].iloc[0]
 
     left, right = st.columns([3, 2])
 
@@ -252,18 +295,31 @@ def main() -> None:
                 },
             )
 
-        # Panel 3: county map
+        # Panel 3: geography — overview map ⇄ per-site satellite view
         with st.container(border=True):
-            st.subheader("Geography")
-            st.caption("Houston-area projects (STUB — placeholder coordinates)")
-            st.plotly_chart(_county_map_stub(scored), use_container_width=True)
+            geo_head, geo_toggle = st.columns([1, 1])
+            geo_head.subheader("Geography")
+            mode = geo_toggle.segmented_control(
+                "View",
+                options=["Overview", "Site view"],
+                default="Overview",
+                label_visibility="collapsed",
+            )
+            if mode == "Site view":
+                _site_view(focus)
+            else:
+                st.caption(
+                    f"All projects · centered on **{focus['queue_id']}** (halo) · "
+                    "dot size = capacity, color = P(complete) · demo coordinates"
+                )
+                st.plotly_chart(_overview_map(scored, focus), width="stretch", config={"scrollZoom": True})
 
     # Panel 4: project detail + Q&A — fixed height, scrolls internally so a long
     # verdict never pushes the map/leaderboard around.
     with right:
         with st.container(height=DETAIL_PANEL_HEIGHT, border=True):
             st.subheader("Project detail")
-            pick = st.selectbox("Project", scored["queue_id"].tolist())
+            pick = st.selectbox("Project", scored["queue_id"].tolist(), key="project_pick")
             row = scored[scored["queue_id"] == pick].iloc[0]
             st.metric("Completion probability", f"{row['completion_probability']:.0%}")
 
