@@ -48,7 +48,15 @@ PALETTE = {
     "ink": "#2E332A",
     "land": "#E4E8DD",
 }
-SOURCE_COLORS = {"ercot": PALETTE["olive"], "tceq": PALETTE["terracotta"]}
+# Map / legend colors by filing status (ERCOT + TCEQ vocabularies).
+STATUS_COLORS: dict[str, str] = {
+    "Active": PALETTE["olive"],
+    "Completed": PALETTE["sage"],
+    "ISSUED PERMIT": PALETTE["terracotta"],
+    "NEW APPLICATION": "#2E6B6B",
+    "RENEWAL/AMENDMENT": "#8B6914",
+}
+_STATUS_FALLBACK = PALETTE["ink"]
 
 # Fixed height of the right-hand detail card; long content scrolls inside it
 # instead of stretching the page (keeps the two columns visually aligned).
@@ -114,14 +122,17 @@ def _label(row: pd.Series) -> str:
 # --------------------------------------------------------------------------- #
 # Geography panels
 # --------------------------------------------------------------------------- #
-def _overview_map(records: pd.DataFrame, focus: pd.Series | None) -> go.Figure:
-    """All records with coordinates on a labeled street basemap (keyless Carto).
+def _status_color(status: str) -> str:
+    return STATUS_COLORS.get(status, _STATUS_FALLBACK)
 
-    Color = source (olive ERCOT / terracotta TCEQ). ERCOT rows carry no
-    coordinates until matching attaches permit coords, so today the dots are
-    mostly TCEQ — stated honestly in the caption.
+
+def _overview_map(records: pd.DataFrame, focus: pd.Series | None) -> go.Figure:
+    """Records with coordinates on a labeled street basemap (keyless Carto).
+
+    Color = status. ERCOT rows carry no coordinates until matching attaches
+    permit coords, so today the dots are mostly TCEQ — stated in the caption.
     """
-    plottable = records[records["lat"].notna() & records["lon"].notna()]
+    plottable = records[records["lat"].notna() & records["lon"].notna()].copy()
     fig = go.Figure()
 
     focused = focus is not None and pd.notna(focus.get("lat")) and pd.notna(focus.get("lon"))
@@ -132,23 +143,31 @@ def _overview_map(records: pd.DataFrame, focus: pd.Series | None) -> go.Figure:
                 mode="markers",
                 marker=dict(size=34, color=PALETTE["sage"], opacity=0.5),
                 hoverinfo="skip",
+                showlegend=False,
             )
         )
 
-    for source, group in plottable.groupby("source"):
+    # Stable legend order: known statuses first, then any leftovers alphabetically.
+    known = [s for s in STATUS_COLORS if s in set(plottable["status"].dropna())]
+    other = sorted(set(plottable["status"].dropna()) - set(known))
+    for status in known + other:
+        group = plottable[plottable["status"] == status]
+        if group.empty:
+            continue
         hover = (
             group["source_id"] + " · " + group["project_name"].str.slice(0, 40)
             + "<br>" + group["company"].str.slice(0, 40)
             + "<br>" + group["county"] + " County · " + group["status"]
+            + "<br>" + group["source"].str.upper()
         )
         fig.add_trace(
             go.Scattermap(
                 lon=group["lon"], lat=group["lat"],
                 mode="markers",
-                name=source.upper(),
+                name=str(status),
                 text=hover,
                 hoverinfo="text",
-                marker=dict(size=10, color=SOURCE_COLORS[source], opacity=0.75),
+                marker=dict(size=10, color=_status_color(str(status)), opacity=0.8),
             )
         )
 
@@ -214,16 +233,27 @@ def main() -> None:
     col_status.markdown(f"🟢 {len(records):,} records · last updated: {stamps}")
 
     # Filters (the on-thesis lens lives here)
-    fcol1, fcol2, fcol3 = st.columns([2, 1, 1])
+    statuses = sorted(records["status"].dropna().astype(str).unique().tolist())
+    fcol1, fcol2, fcol3, fcol4 = st.columns([2, 1.4, 1, 1])
     search = fcol1.text_input(
         "Search", placeholder="Company, project, or county…", label_visibility="collapsed"
     )
-    gas_focus = fcol2.toggle("Gas-to-power focus", value=False)
-    source_pick = fcol3.multiselect(
+    status_pick = fcol2.multiselect(
+        "Status",
+        statuses,
+        default=statuses,
+        help="Filter the table and map by filing status.",
+    )
+    gas_focus = fcol3.toggle("Gas-to-power focus", value=False)
+    source_pick = fcol4.multiselect(
         "Sources", ["ercot", "tceq"], default=["ercot", "tceq"], label_visibility="collapsed"
     )
 
     view = records[records["source"].isin(source_pick or ["ercot", "tceq"])]
+    if status_pick:
+        view = view[view["status"].isin(status_pick)]
+    else:
+        view = view.iloc[0:0]  # nothing selected → empty view
     if gas_focus:
         view = view[view["kind"].str.contains("gas|fossil", case=False, na=False)]
     if search:
@@ -302,8 +332,8 @@ def main() -> None:
             else:
                 n_plot = int((view["lat"].notna() & view["lon"].notna()).sum())
                 st.caption(
-                    f"{n_plot:,} records with coordinates (TCEQ permits carry them; "
-                    "ERCOT rows plot after matching). Olive = ERCOT · terracotta = TCEQ."
+                    f"{n_plot:,} records with coordinates (mostly TCEQ; ERCOT after matching). "
+                    "Map color = status · filter Status above to update table + map."
                 )
                 st.plotly_chart(
                     _overview_map(view, focus), width="stretch", config={"scrollZoom": True}
