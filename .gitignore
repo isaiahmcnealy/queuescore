@@ -3,6 +3,7 @@ data/raw/*.xlsx
 data/raw/*.xls
 data/raw/*.csv
 data/snapshots/*.parquet
+data/snapshots/*.meta.json
 data/snapshots/*.csv
 
 # Secrets
