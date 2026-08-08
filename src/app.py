@@ -1,4 +1,4 @@
-"""Project Radar — Streamlit app.
+"""QueueSense — Streamlit app.
 
 Live origination intelligence for Texas power projects. Runs against the REAL
 unified record table (ERCOT interconnection queue + TCEQ power-generation air
@@ -29,7 +29,7 @@ import streamlit.components.v1 as components
 # Make `from src import ...` work when launched via `streamlit run src/app.py`.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src import explain  # noqa: E402
+from src import explain, resolve, stage  # noqa: E402
 from src.sources import load_all  # noqa: E402
 
 
@@ -292,9 +292,9 @@ def _site_view(
 # App
 # --------------------------------------------------------------------------- #
 def main() -> None:
-    st.set_page_config(page_title="QueueScore", page_icon="📡", layout="wide")
+    st.set_page_config(page_title="QueueSense", page_icon="📡", layout="wide")
     _inject_css()
-    st.title("QueueScore")
+    st.title("QueueSense")
     st.caption(
         "Live origination intelligence for Texas power projects — "
         "ERCOT interconnection queue + TCEQ air permits in one view."
@@ -304,11 +304,28 @@ def main() -> None:
     col_btn, col_status = st.columns([1, 3])
     refresh = col_btn.button("Refresh data")
     records, fresh = _load_records(refresh=refresh)
+
+    # Cross-source matching: link ERCOT queue entries to their TCEQ permits
+    # (match table produced by `python -m src.resolve`; snapshot-cached).
+    matches = resolve.load_matches()
+    if matches is not None and len(matches):
+        records = resolve.link_records(records, matches)
+        n_links = len(matches)
+    else:
+        records = records.assign(match_id="", match_reason="")
+        n_links = 0
+
+    # Stage inference (M4): funnel position + confidence + evidence per record.
+    records = stage.annotate_stages(records)
+
     stamps = " · ".join(
         f"**{name.upper()}** {ts:%b %d %H:%M}" if ts else f"**{name.upper()}** never"
         for name, ts in fresh.items()
     )
-    col_status.markdown(f"🟢 {len(records):,} records · last updated: {stamps}")
+    col_status.markdown(
+        f"🟢 {len(records):,} records · 🔗 {n_links} cross-source links · "
+        f"last updated: {stamps}"
+    )
 
     # Filters — status multiselect: empty = all (chips with X only when narrowed).
     statuses_present = set(records["status"].dropna().astype(str))
@@ -364,7 +381,7 @@ def main() -> None:
             )
             table = view[
                 ["source", "source_id", "project_name", "company", "county",
-                 "kind", "status", "capacity_mw", "record_date"]
+                 "kind", "stage", "status", "capacity_mw", "record_date"]
             ]
             event = st.dataframe(
                 table,
@@ -381,6 +398,7 @@ def main() -> None:
                     "company": st.column_config.TextColumn("Company"),
                     "county": st.column_config.TextColumn("County"),
                     "kind": st.column_config.TextColumn("Type"),
+                    "stage": st.column_config.TextColumn("Stage"),
                     "status": st.column_config.TextColumn("Status"),
                     "capacity_mw": st.column_config.NumberColumn("MW", format="%.0f"),
                     "record_date": st.column_config.DateColumn("Filed"),
@@ -470,7 +488,14 @@ def main() -> None:
                     st.session_state.pop("_origination_read", None)
                     st.session_state.pop("_record_answer", None)
 
-                st.metric("Status", row["status"] or "—")
+                st.metric("Stage", row["stage"])
+                conf_icon = {"high": "🟢", "medium": "🟡", "low": "⚪"}.get(
+                    row["stage_confidence"], "⚪"
+                )
+                st.caption(
+                    f"{conf_icon} {row['stage_confidence']} confidence — "
+                    f"{row['stage_evidence']}"
+                )
                 cap = f"{row['capacity_mw']:.0f} MW · " if pd.notna(row["capacity_mw"]) else ""
                 filed = (
                     f"{pd.to_datetime(row['record_date']):%Y-%m-%d}"
@@ -479,10 +504,30 @@ def main() -> None:
                 st.markdown(
                     f"**{row['project_name'] or '(unnamed project)'}**\n\n"
                     f"{row['company'] or 'unknown company'} · {row['county']} County\n\n"
-                    f"{cap}{row['kind']} · filed {filed}\n\n"
+                    f"{cap}{row['kind']} · {row['status'] or 'status unknown'} · filed {filed}\n\n"
                     f"Stage signal: `{row['stage_signal'] or 'n/a'}` · "
                     f"ref `{row['link_id'] or row['source_id']}`"
                 )
+
+                # The stitched story: show the matched record from the other source.
+                if row.get("match_id"):
+                    other = records[
+                        (records["source"] != row["source"])
+                        & (records["source_id"] == row["match_id"])
+                    ]
+                    st.write("**🔗 Linked record (cross-source match)**")
+                    if len(other):
+                        o = other.iloc[0]
+                        o_filed = (
+                            f"{pd.to_datetime(o['record_date']):%Y-%m-%d}"
+                            if pd.notna(o["record_date"]) else "unknown date"
+                        )
+                        st.markdown(
+                            f"`{o['source'].upper()}` **{o['source_id']}** · "
+                            f"{o['project_name'] or o['company']}\n\n"
+                            f"{o['company']} · {o['status']} · filed {o_filed}\n\n"
+                            f"_Why linked:_ {row['match_reason'] or 'name match in same county'}"
+                        )
 
                 st.write("**Origination read**")
                 if st.button("Generate read", key="btn_origination_read"):

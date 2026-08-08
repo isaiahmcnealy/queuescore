@@ -1,4 +1,4 @@
-# QueueScore
+# QueueSense
 
 Score every project in the live ERCOT interconnection queue with a **completion
 probability** — the likelihood it reaches a signed Interconnection Agreement (IA)

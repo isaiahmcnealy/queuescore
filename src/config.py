@@ -1,4 +1,4 @@
-"""Central configuration for QueueScore.
+"""Central configuration for QueueSense.
 
 Every constant, path, and column mapping lives here so the rest of the codebase
 never hardcodes a path or a magic column name. Two mapping dicts translate the
@@ -132,8 +132,18 @@ def _env_bool(name: str, default: bool) -> bool:
 
 DRY_RUN: bool = _env_bool("DRY_RUN", True)
 
-# Model used by explain.py when DRY_RUN is False.
-ANTHROPIC_MODEL: str = "claude-opus-4-8"
+# Models are configurable via .env without code edits; defaults below.
+# ANTHROPIC_MODEL: user-facing verdicts/Q&A (quality matters, low volume).
+ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-opus-4-8")
+
+# MATCH_MODEL: high-volume match adjudication in resolve.py — simple yes/no
+# classification, so Haiku ($1/$5 per MTok vs $5/$25) is plenty.
+MATCH_MODEL: str = os.getenv("MATCH_MODEL", "claude-haiku-4-5")
+
+# Cap on ambiguous pairs sent to Claude per run (token guardrail while
+# testing live; verdicts are disk-cached so reruns cost nothing).
+# Override via .env for a backlog-clearing run: MATCH_MAX_CLAUDE_PAIRS=1000
+MATCH_MAX_CLAUDE_PAIRS: int = int(os.getenv("MATCH_MAX_CLAUDE_PAIRS", "60"))
 
 # Seed for DummyScorer so leaderboard output is stable across reruns.
 RANDOM_SEED: int = 42
