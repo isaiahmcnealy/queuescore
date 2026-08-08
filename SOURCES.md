@@ -21,17 +21,26 @@ Portal: https://permit-search.tceq.texas.gov/  (React app over a public REST API
 GET /token?appName=psp-frontend   ->  returns a JWT string (use as Bearer)
 ```
 
-**Search:**
+**Search (schema CRACKED — implemented in `src/sources/tceq.py`):**
 ```
-POST /search/permitsWithPages?page=0&size=50
+POST /search/permitsWithPages?page=0&size=500
   headers: Authorization: Bearer <token>
            AppName: psp-frontend           # REQUIRED (400 without it)
            Content-Type: application/json
-  body:    { ...filter... }                # SCHEMA TBD — includes a "keyword" field.
-                                            # Empty {} -> 500. Reverse-engineer AM (below).
+  body:
+  {
+    "keyword": "electric power generation",   # server-side activity/name search
+    "normalizedAddress": "",
+    "radius": null, "latitude": null, "longitude": null,   # nulls = all of Texas
+    "permitStatus": ["NEW APPLICATION", "ISSUED PERMIT", "RENEWAL/AMENDMENT"],
+    "mediaPrograms": [{"mediaCd": "AIR", "programDesc": ["Air New Source"]}],
+    "pageable": {"paged": true, "pageNumber": 0, "pageSize": 500}
+  }
   -> { totalElements, totalPages, content: [ {record}, ... ] }
 ```
-15,748 total records across all programs (filter to air + power).
+Verified live: 270,308 records unfiltered · 96,091 AIRNSR · **1,926 with the
+power-generation keyword** (~4 requests at 500/page). 1,902/1,926 carry real
+coordinates; 102 are NEW APPLICATIONs (the early-stage signal).
 
 **Fields per record (everything we need is here):**
 | field | use |
