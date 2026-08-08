@@ -5,6 +5,7 @@ data/raw/*.csv
 data/snapshots/*.parquet
 data/snapshots/*.meta.json
 data/snapshots/*.csv
+data/snapshots/*.json
 # Cross-source match table is small and needed for the live demo.
 !data/snapshots/matches.parquet
 
