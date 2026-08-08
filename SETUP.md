@@ -30,11 +30,15 @@ The app only needs a key when you flip `DRY_RUN = False` in `src/config.py`.
 cp .env.example .env      # then paste your real ANTHROPIC_API_KEY
 ```
 
-Nothing auto-loads `.env`, so export it before running (or add `python-dotenv`):
+Nothing auto-loads `.env` unless `python-dotenv` is installed (it is in
+`requirements.txt`). `src/config.py` calls `load_dotenv` on import, so a repo-root
+`.env` is enough for local runs and for the arya systemd service once
+`EnvironmentFile=` is enabled in [`deploy/queuescore.service`](deploy/queuescore.service).
 
-```bash
-export $(grep -v '^#' .env | xargs)
-```
+## Production
+
+Hosted on **arya** behind Cloudflare Tunnel at `queuescore.tech`. See
+[DEPLOY.md](DEPLOY.md) (systemd, self-hosted runner, DNS).
 
 ## Optional: offline live-queue demo
 
@@ -56,7 +60,8 @@ is gitignored so it never gets committed.
 
 ## What's safe in git
 
-Committed: source, `README.md`, `SETUP.md`, `requirements.txt`, `.env.example`,
+Committed: source, `README.md`, `SETUP.md`, `DEPLOY.md`, `DATA.md`,
+`requirements.txt`, `.env.example`, `deploy/`, `scripts/`, workflows,
 `.gitkeep`s, `conftest.py`, `.gitignore`.
 
 Never committed (gitignored): `.env`, `data/raw/*.xlsx`, `data/snapshots/*.parquet`,

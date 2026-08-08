@@ -1,0 +1,22 @@
+[Unit]
+Description=QueueScore Streamlit
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/queuescore
+Environment=STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+# Optional: EnvironmentFile=/opt/queuescore/.env
+ExecStart=/opt/queuescore/.venv/bin/streamlit run src/app.py \
+  --server.port 8501 \
+  --server.address 0.0.0.0 \
+  --server.headless true \
+  --browser.gatherUsageStats false
+Restart=always
+RestartSec=5
+StandardOutput=append:/opt/queuescore/streamlit.log
+StandardError=append:/opt/queuescore/streamlit.log
+
+[Install]
+WantedBy=multi-user.target

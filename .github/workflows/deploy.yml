@@ -1,0 +1,44 @@
+name: Deploy
+
+# Self-hosted on arya: pull main, refresh deps, restart Streamlit.
+# Runner is registered to this repo only (label: queuescore).
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-arya
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, queuescore]
+    steps:
+      - name: Pull latest
+        run: |
+          cd /opt/queuescore
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git fetch --prune origin main
+          git reset --hard origin/main
+
+      - name: Install deps
+        run: /opt/queuescore/.venv/bin/pip install -r /opt/queuescore/requirements.txt
+
+      - name: Restart Streamlit
+        run: /opt/queuescore/scripts/restart.sh
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf -o /dev/null http://127.0.0.1:8501/; then
+              echo "queuescore healthy on :8501"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "health check failed" >&2
+          tail -n 80 /opt/queuescore/streamlit.log >&2 || true
+          systemctl --no-pager --full status queuescore >&2 \
+            || sudo -n systemctl --no-pager --full status queuescore >&2 \
+            || true
+          exit 1
