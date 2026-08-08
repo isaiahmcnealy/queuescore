@@ -268,8 +268,20 @@ once per source until matching links them (🔗).
 
 
 def _render_verdict(text: str) -> None:
-    """Render the Claude read as a thematic callout (escaped; paragraphs kept)."""
-    paras = [html.escape(p.strip()) for p in text.split("\n\n") if p.strip()]
+    """Render the Claude read as a thematic callout.
+
+    HTML-escaped for safety, then minimal markdown (**bold**) re-applied so the
+    brief's section labels render properly.
+    """
+    import re
+
+    paras = []
+    for p in text.split("\n\n"):
+        if not p.strip():
+            continue
+        safe = html.escape(p.strip())
+        safe = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", safe)
+        paras.append(safe)
     body = "".join(f"<p>{p}</p>" for p in paras)
     st.markdown(f'<div class="verdict-box">{body}</div>', unsafe_allow_html=True)
 
@@ -752,6 +764,8 @@ def main() -> None:
                     unsafe_allow_html=True,
                 )
 
+                # The stitched story: show the matched record from the other source.
+                linked_rec = None
                 if row.get("match_id"):
                     other = records[
                         (records["source"] != row["source"])
@@ -759,6 +773,7 @@ def main() -> None:
                     ]
                     if len(other):
                         o = other.iloc[0]
+                        linked_rec = o.to_dict()
                         o_filed = (
                             f"{pd.to_datetime(o['record_date']):%Y-%m-%d}"
                             if pd.notna(o["record_date"]) else "unknown date"
@@ -791,10 +806,34 @@ def main() -> None:
                     '<p class="qs-rail-label">Ask</p>',
                     unsafe_allow_html=True,
                 )
-                if st.button("Generate origination read", key="btn_origination_read"):
-                    with st.spinner("Asking Claude…"):
-                        st.session_state._origination_read = explain.explain_record(
-                            row.to_dict()
+                if st.button("Generate brief", key="btn_origination_read"):
+                    # Context beyond the record itself: the company's other
+                    # filings and county activity — all computed locally.
+                    my_company = resolve.normalize_name(row["company"])
+                    if my_company:
+                        same_co = records[
+                            (records["company"].map(resolve.normalize_name) == my_company)
+                            & (records["source_id"] != row["source_id"])
+                        ]
+                    else:
+                        same_co = records.iloc[0:0]
+                    county_rows = records[
+                        (records["county_key"] == row["county_key"])
+                        & (records["source_id"] != row["source_id"])
+                    ]
+                    county_ctx = (
+                        f"{len(county_rows)} other filings "
+                        f"({county_rows['source'].value_counts().to_dict()}); e.g. "
+                        + "; ".join(
+                            (county_rows["project_name"].replace("", pd.NA).dropna().head(3))
+                        )
+                    ) if len(county_rows) else ""
+                    with st.spinner("Building brief…"):
+                        st.session_state._origination_read = explain.generate_brief(
+                            row.to_dict(),
+                            linked_rec,
+                            same_co.to_dict("records"),
+                            county_ctx,
                         )
                 if st.session_state.get("_origination_read"):
                     _render_verdict(st.session_state._origination_read)

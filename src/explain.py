@@ -77,6 +77,39 @@ RECORD_QA_USER_TEMPLATE: str = (
     "Question: {question}"
 )
 
+BRIEF_SYSTEM_PROMPT: str = (
+    "You are QueueScore, preparing a deal-origination brief on one Texas power "
+    "project for a business-development lead deciding whether to pursue it.\n"
+    "Write ~150 words in EXACTLY this markdown skeleton:\n"
+    "**Verdict:** pursue now / watch / pass — one reason.\n"
+    "**Why now:** the freshest filing event and its date (the timing trigger).\n"
+    "**Snapshot:** size, technology, county, stage in one line.\n"
+    "**Who:** the company, plus their other filings in our data if any.\n"
+    "**Angle:** what the project plausibly needs next given its stage "
+    "(e.g. owner's-engineer or pre-FEED support during studies, interconnection "
+    "help before an IA, EPC selection after one). Frame as a conversation opener.\n"
+    "**Evidence:** cite filing IDs and the cross-source match reason if linked.\n"
+    "**Gaps:** what the data does NOT show — be honest.\n"
+    "Hard rules: use ONLY the data provided. Never invent contact names, "
+    "financing, offtake, or probability numbers. If a section has no data, say so."
+)
+
+BRIEF_USER_TEMPLATE: str = (
+    "Today's date: {today}\n\n"
+    "Selected record:\n{record}\n\n"
+    "Linked record from the other source (same project), if any:\n{linked}\n\n"
+    "Other filings by the same company in our data:\n{company_filings}\n\n"
+    "County context (other filings in {county} County):\n{county_context}\n\n"
+    "Write the origination brief."
+)
+
+_CANNED_BRIEF: str = (
+    "[DRY_RUN] **Verdict:** watch — placeholder brief.\n\n"
+    "**Why now:** enable the Anthropic API (DRY_RUN=false + key) for a real, "
+    "evidence-based brief built from this record, its linked filing, the "
+    "company's other projects, and county context."
+)
+
 _CANNED_RECORD_VERDICT: str = (
     "[DRY_RUN] Placeholder read: this record's status and stage signal suggest "
     "an active project worth tracking. Set DRY_RUN=False (and an "
@@ -125,6 +158,65 @@ def explain_project(
         attributions=_format_attributions(attributions),
     )
     return _call_claude(VERDICT_SYSTEM_PROMPT, prompt)
+
+
+def _brief_cache_path():
+    return config.SNAPSHOT_DIR / "briefs.json"
+
+
+def _load_brief_cache() -> dict:
+    import json
+
+    if _brief_cache_path().exists():
+        return json.loads(_brief_cache_path().read_text())
+    return {}
+
+
+def generate_brief(
+    record: dict,
+    linked: dict | None,
+    company_filings: list[dict],
+    county_context: str,
+    use_cache: bool = True,
+) -> str:
+    """Origination brief for one record, built from everything we know locally.
+
+    Disk-cached per record (``data/snapshots/briefs.json``) so re-generating a
+    brief costs zero tokens; pass ``use_cache=False`` to force a fresh one.
+    """
+    import datetime as dt
+    import json
+
+    key = f"{record.get('source')}:{record.get('source_id')}"
+    cache = _load_brief_cache()
+    if use_cache and key in cache:
+        return cache[key]["brief"]
+
+    if config.DRY_RUN:
+        return _CANNED_BRIEF
+
+    def _slim(d: dict) -> dict:
+        keep = ("source", "source_id", "project_name", "company", "county",
+                "kind", "status", "stage", "stage_signal", "stage_evidence",
+                "capacity_mw", "record_date", "link_id", "match_reason")
+        return {k: str(d.get(k, "")) for k in keep if d.get(k) not in ("", None)}
+
+    prompt = BRIEF_USER_TEMPLATE.format(
+        today=dt.date.today().isoformat(),
+        record=json.dumps(_slim(record), indent=1),
+        linked=json.dumps(_slim(linked), indent=1) if linked else "none on file",
+        company_filings=(
+            json.dumps([_slim(f) for f in company_filings[:8]], indent=1)
+            if company_filings else "none found"
+        ),
+        county=record.get("county", "?"),
+        county_context=county_context or "no other filings on record",
+    )
+    brief = _call_claude(BRIEF_SYSTEM_PROMPT, prompt)
+    cache[key] = {"brief": brief, "generated_at": dt.datetime.now().isoformat()}
+    config.SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
+    _brief_cache_path().write_text(json.dumps(cache, indent=0))
+    return brief
 
 
 def explain_record(record: dict) -> str:

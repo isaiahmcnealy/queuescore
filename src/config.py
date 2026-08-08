@@ -130,7 +130,7 @@ def _env_bool(name: str, default: bool) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
-DRY_RUN: bool = _env_bool("DRY_RUN", True)
+DRY_RUN: bool = _env_bool("DRY_RUN", False)
 
 # Models are configurable via .env without code edits; defaults below.
 # ANTHROPIC_MODEL: user-facing verdicts/Q&A (quality matters, low volume).
