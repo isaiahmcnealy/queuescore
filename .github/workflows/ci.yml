@@ -15,7 +15,9 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.14"   # pinned to match local dev (see .venv / SETUP.md)
+          # 3.12 has prebuilt wheels for gridstatus's lxml~=5.3 pin.
+          # 3.14 forces a source build (needs libxml2/libxslt) and breaks CI.
+          python-version: "3.12"
           cache: pip
 
       - name: Install deps
