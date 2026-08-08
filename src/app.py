@@ -85,6 +85,22 @@ _CSS = f"""
     font-family: Fraunces, Georgia, serif !important;
     letter-spacing: -0.02em; color: {PALETTE['olive']};
   }}
+  .qs-explore-mw,
+  p.qs-explore-mw,
+  div[data-testid="stMarkdownContainer"] p.qs-explore-mw {{
+    font-family: Fraunces, Georgia, serif !important;
+    font-size: 1.85rem !important; font-weight: 700 !important;
+    letter-spacing: -0.03em; line-height: 1.1 !important;
+    color: {PALETTE['olive']} !important; margin: 0 !important;
+    text-align: center !important;
+  }}
+  .qs-explore-mw span,
+  p.qs-explore-mw span {{
+    font-family: "Source Sans 3", "Segoe UI", sans-serif !important;
+    font-size: 0.72rem !important; font-weight: 700 !important;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: rgba(74, 83, 60, 0.55) !important; margin-left: 0.4rem;
+  }}
   .stButton > button {{
     border-radius: 999px; border: 1px solid {PALETTE['olive']};
     color: {PALETTE['olive']}; font-weight: 600; padding: 0.4rem 1.1rem;
@@ -282,6 +298,28 @@ _CSS = f"""
     font-weight: 700; color: {PALETTE['terracotta']}; margin: 0 0 0.25rem 0;
   }}
   .qs-msg-meta {{ font-size: 0.82rem; opacity: 0.72; }}
+  .qs-mw {{
+    font-family: Fraunces, Georgia, serif; font-size: 2.35rem; font-weight: 700;
+    letter-spacing: -0.03em; line-height: 1; color: {PALETTE['ink']};
+    margin: 0 !important; padding-left: 0 !important; text-align: center;
+  }}
+  .qs-mw span {{
+    display: block; margin: 0.35rem 0 0 0;
+    font-family: "Source Sans 3", "Segoe UI", sans-serif; font-size: 0.72rem;
+    font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(46, 51, 42, 0.48);
+  }}
+  .qs-msg-mw {{
+    background: rgba(231, 235, 225, 0.55);
+    padding: 0.85rem 0.75rem 0.75rem;
+    text-align: center;
+  }}
+  .qs-msg-mw > p {{ padding-left: 0 !important; }}
+  .qs-mw-name {{
+    font-family: Fraunces, Georgia, serif; font-size: 1.05rem; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.2; color: {PALETTE['ink']};
+    margin: 0 0 0.55rem 0 !important;
+  }}
 
   .qs-funnel {{
     display: flex; flex-direction: column; gap: 0; margin: 0;
@@ -772,6 +810,42 @@ def _drivers_for(row: pd.Series) -> list[tuple[str, float]]:
     return drivers
 
 
+def _capacity_mw(row: pd.Series, records: pd.DataFrame | None = None) -> float | None:
+    """MW for this filing; fall back to linked ERCOT capacity when missing."""
+    mw = row.get("capacity_mw")
+    if pd.notna(mw):
+        return float(mw)
+    if records is None or not row.get("match_id"):
+        return None
+    linked = records[
+        (records["source"] != row["source"])
+        & (records["source_id"] == row["match_id"])
+    ]
+    if len(linked) and pd.notna(linked.iloc[0].get("capacity_mw")):
+        return float(linked.iloc[0]["capacity_mw"])
+    return None
+
+
+def _render_mw(row: pd.Series, records: pd.DataFrame | None = None) -> None:
+    """Project name + large capacity — sits above the completion gauge."""
+    name = html.escape(str(row.get("project_name") or "(unnamed)"))
+    mw = _capacity_mw(row, records)
+    mw_html = (
+        f'<p class="qs-mw">{mw:.0f} MW<span>coming online</span></p>'
+        if mw is not None
+        else ""
+    )
+    st.markdown(
+        (
+            f'<div class="qs-msg qs-msg-mw">'
+            f'<p class="qs-mw-name">{name}</p>'
+            f'{mw_html}'
+            f'</div>'
+        ),
+        unsafe_allow_html=True,
+    )
+
+
 def _render_score_card(row: pd.Series) -> None:
     """Compact P(IA) gauge; hover reveals SHAP drivers. ERCOT only."""
     if row.get("source") != "ercot":
@@ -1165,8 +1239,33 @@ def main() -> None:
     # Left: map + minimizable filings drawer in one surface
     with explore:
         with st.container(border=True):
-            geo_head, geo_toggle = st.columns([3, 2], vertical_alignment="center")
-            geo_head.markdown("### Explore")
+            total_mw = float(
+                pd.to_numeric(view["capacity_mw"], errors="coerce").fillna(0).sum()
+            )
+            if total_mw >= 1000:
+                mw_num, mw_unit = f"{total_mw / 1000:,.1f}", "GW"
+            else:
+                mw_num, mw_unit = f"{total_mw:,.0f}", "MW"
+
+            geo_head, geo_mw, geo_toggle = st.columns(
+                [1.4, 3.2, 1.7], gap="small", vertical_alignment="center"
+            )
+            geo_head.markdown(
+                (
+                    f'<p class="qs-explore-title" style="font-family:Fraunces,Georgia,serif;'
+                    f'font-size:1.45rem;font-weight:700;letter-spacing:-0.02em;'
+                    f'color:{PALETTE["olive"]};margin:0;">Explore</p>'
+                ),
+                unsafe_allow_html=True,
+            )
+            geo_mw.markdown(
+                (
+                    f'<p class="qs-explore-mw" style="color:{PALETTE["olive"]};'
+                    f'text-align:center;">'
+                    f'{mw_num} {mw_unit}<span>in view</span></p>'
+                ),
+                unsafe_allow_html=True,
+            )
             mode = geo_toggle.segmented_control(
                 "View", options=["Overview", "Site view"],
                 default="Overview", label_visibility="collapsed",
@@ -1333,14 +1432,11 @@ def main() -> None:
                     st.session_state.pop("_origination_read", None)
                     st.session_state.pop("_record_answer", None)
 
-                # Score (ERCOT) → stage → identity → stitched → ask
+                # MW → score (ERCOT) → stage → identity → stitched → ask
+                _render_mw(row, records)
                 _render_score_card(row)
                 _render_stage_ladder(row)
 
-                cap = (
-                    f"{row['capacity_mw']:.0f} MW · "
-                    if pd.notna(row["capacity_mw"]) else ""
-                )
                 filed = (
                     f"{pd.to_datetime(row['record_date']):%Y-%m-%d}"
                     if pd.notna(row["record_date"]) else "—"
@@ -1348,13 +1444,11 @@ def main() -> None:
                 st.markdown(
                     (
                         f'<div class="qs-msg">'
-                        f'<p style="font-weight:700;margin:0 0 0.2rem 0;">'
-                        f'{html.escape(str(row["project_name"] or "(unnamed)"))}</p>'
                         f'<p class="qs-msg-meta">'
                         f'{html.escape(str(row["company"] or "—"))}'
                         f' · {html.escape(str(row["county"] or ""))} County</p>'
                         f'<p class="qs-msg-meta">'
-                        f'{html.escape(cap)}{html.escape(str(row["kind"] or ""))}'
+                        f'{html.escape(str(row["kind"] or ""))}'
                         f' · {html.escape(str(row["status"] or "—"))}'
                         f' · {filed}</p>'
                         f'</div>'
