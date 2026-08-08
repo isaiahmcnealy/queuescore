@@ -142,7 +142,8 @@ MATCH_MODEL: str = os.getenv("MATCH_MODEL", "claude-haiku-4-5")
 
 # Cap on ambiguous pairs sent to Claude per run (token guardrail while
 # testing live; verdicts are disk-cached so reruns cost nothing).
-MATCH_MAX_CLAUDE_PAIRS: int = 60
+# Override via .env for a backlog-clearing run: MATCH_MAX_CLAUDE_PAIRS=1000
+MATCH_MAX_CLAUDE_PAIRS: int = int(os.getenv("MATCH_MAX_CLAUDE_PAIRS", "60"))
 
 # Seed for DummyScorer so leaderboard output is stable across reruns.
 RANDOM_SEED: int = 42
