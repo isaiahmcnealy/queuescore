@@ -27,6 +27,11 @@ venv/
 # Keep the directory placeholders
 !data/raw/.gitkeep
 !data/snapshots/.gitkeep
+!models/.gitkeep
+
+# macOS
+.DS_Store
+data/.DS_Store
 
 # app control
 .app.pid

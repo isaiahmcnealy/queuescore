@@ -41,14 +41,12 @@ quality, depth on the hard parts (entity matching, stage inference).
   (cream/sage/olive/terracotta). Plain language everywhere; state honest gaps.
 
 ## In flight / next
-1. **External model integration**: Camille is training a success model
-   (P(reach IA), LBNL data) OUTSIDE the repo. Agreed easiest path: she exports
-   one `joblib` Pipeline trained in the repo venv → `models/` → fill
-   `XGBScorer.load/score` in `src/scorer.py` (contract: `score(features) ->
-   ScoreResult`), add `get_scorer()` ladder (XGB → Baseline → Dummy). Her
-   features must be computable live: capacity, type, county, queue year/age
-   (`config.MODEL_FEATURES`); needs generation-type normalizer (live ERCOT
-   verbose names → LBNL `type_1` vocab).
+1. **Completion model (wired)**: Camille's shared-feature XGB lives in
+   `models/queuescore_ercot_shared.joblib` (+ `.json` export). Scoring API is
+   `src/score_model.py` (`attach_scores` / `score_queue` / `explain_drivers`).
+   App shows **P(IA)** + tier + SHAP drivers on ERCOT rows. Ladder:
+   `get_scorer()` in `src/scorer.py` (XGB → Baseline → Dummy). macOS needs
+   `brew install libomp` for xgboost to load.
 2. **M7**: README rewrite for judges + 2-minute demo script + "what we'd build
    next" (agentic enrichment: hiring/news signals).
 3. Optional polish: second-opinion pass on the 20 Claude matches (Opus,

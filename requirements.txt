@@ -2,6 +2,7 @@ gridstatus
 xgboost
 shap
 scikit-learn
+joblib
 streamlit
 plotly
 pandas

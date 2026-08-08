@@ -139,29 +139,67 @@ class BaselineScorer(Scorer):
 
 
 # --------------------------------------------------------------------------- #
-# XGBScorer — skeleton only
+# XGBScorer — Camille's shared-feature ERCOT bundle
 # --------------------------------------------------------------------------- #
 class XGBScorer(Scorer):
-    """Real model: XGBoost classifier + SHAP attributions.
+    """XGBoost classifier + SHAP, backed by ``models/queuescore_ercot_shared.joblib``.
 
-    Skeleton only. Day-of implementation:
-      * ``fit`` — train XGBClassifier on LBNL features/target, persist booster
-      * ``load`` — restore a persisted booster + SHAP explainer
-      * ``score`` — predict_proba + shap_values -> ScoreResult
+    Prefer ``score_model.attach_scores`` / ``score_queue`` for the live radar
+    path (needs ``kind`` / ``source_id`` / congestion features). This class
+    satisfies the Scorer contract when handed a frame already in bundle schema
+    (or a radar slice — see ``score_radar``).
     """
 
     def __init__(self) -> None:
-        self._model = None       # xgboost.XGBClassifier once trained
-        self._explainer = None   # shap.TreeExplainer once fit
+        self._bundle: dict | None = None
 
     def fit(self, features: pd.DataFrame, target: pd.Series) -> "XGBScorer":
-        """Train on LBNL data and build the SHAP explainer. TODO(day-of)."""
-        raise NotImplementedError("XGBScorer.fit is implemented day-of.")
+        """Training happens offline; the persisted bundle is the source of truth."""
+        raise NotImplementedError(
+            "XGBScorer is load-only — train offline and drop the joblib in models/."
+        )
 
-    def load(self, model_path: str) -> "XGBScorer":
-        """Restore a persisted booster + explainer. TODO(day-of)."""
-        raise NotImplementedError("XGBScorer.load is implemented day-of.")
+    def load(self, model_path: str | None = None) -> "XGBScorer":
+        from . import score_model
+
+        self._bundle = score_model.load_bundle(model_path)
+        return self
 
     def score(self, features: pd.DataFrame) -> ScoreResult:
-        """predict_proba + SHAP -> ScoreResult. TODO(day-of)."""
-        raise NotImplementedError("XGBScorer.score is implemented day-of.")
+        """Score a radar-schema or already-mapped frame; SHAP attributions included."""
+        from . import score_model
+
+        if self._bundle is None:
+            raise RuntimeError("Call XGBScorer.load() before score().")
+        # Radar schema (source_id / kind / capacity_mw) vs already-mapped.
+        if "source_id" in features.columns and "kind" in features.columns:
+            mapped = score_model.map_live_parquet(features)
+            mapped = score_model.add_congestion(mapped)
+        else:
+            mapped = features
+        probs = score_model.predict(mapped, self._bundle)
+        drivers = score_model.explain_drivers(mapped, self._bundle, top_k=len(self._bundle["features"]))
+        attributions = [dict(d["top_drivers"]) for d in drivers]
+        return ScoreResult(probabilities=np.asarray(probs, dtype=float), attributions=attributions)
+
+    def score_radar(self, ercot: pd.DataFrame) -> pd.DataFrame:
+        """Convenience: score a live ERCOT radar slice (no SHAP)."""
+        from . import score_model
+
+        if self._bundle is None:
+            raise RuntimeError("Call XGBScorer.load() before score_radar().")
+        return score_model.score_queue(ercot, self._bundle)
+
+
+def get_scorer() -> Scorer:
+    """Prefer the XGB bundle; fall back to Baseline, then Dummy."""
+    path = config.MODEL_BUNDLE_PATH
+    if path.exists():
+        try:
+            return XGBScorer().load(str(path))
+        except Exception:  # noqa: BLE001 — missing libomp / version skew
+            pass
+    try:
+        return BaselineScorer()
+    except Exception:  # noqa: BLE001
+        return DummyScorer()
