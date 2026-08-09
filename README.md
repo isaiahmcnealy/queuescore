@@ -87,9 +87,9 @@ More docs: [SETUP.md](SETUP.md) · [DATA.md](DATA.md) ·
 
 Built in a day by three people:
 
-- **Isaiah McNealy** — [LinkedIn](https://www.linkedin.com/in/PASTE-ISAIAH)
-- **Tyler Wooten** — [LinkedIn](https://www.linkedin.com/in/PASTE-TYLER)
-- **Camille Little** — [LinkedIn](https://www.linkedin.com/in/PASTE-CAMILLE)
+- **Isaiah McNealy** — [LinkedIn](https://www.linkedin.com/in/isaiahmcnealy/)
+- **Tyler Wooten** — [LinkedIn](https://www.linkedin.com/in/tylerwooten/)
+- **Camille Little** — [LinkedIn](https://www.linkedin.com/in/camille-little-phd-bb5a95169/)
 
 Or find us via the **Get in touch** button in the app itself.
 

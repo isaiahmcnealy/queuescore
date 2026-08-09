@@ -68,9 +68,9 @@ MAP_HEIGHT = 480
 # LinkedIn URLs are the public contact points shown to reviewers.
 REPO_URL = "https://github.com/isaiahmcnealy/queuescore"
 TEAM = [
-    {"name": "Isaiah McNealy", "linkedin": "https://www.linkedin.com/in/PASTE-ISAIAH"},
-    {"name": "Tyler Wooten", "linkedin": "https://www.linkedin.com/in/PASTE-TYLER"},
-    {"name": "Camille Little", "linkedin": "https://www.linkedin.com/in/PASTE-CAMILLE"},
+    {"name": "Isaiah McNealy", "linkedin": "https://www.linkedin.com/in/isaiahmcnealy/"},
+    {"name": "Tyler Wooten", "linkedin": "https://www.linkedin.com/in/tylerwooten/"},
+    {"name": "Camille Little", "linkedin": "https://www.linkedin.com/in/camille-little-phd-bb5a95169/"},
 ]
 
 _CSS = f"""
