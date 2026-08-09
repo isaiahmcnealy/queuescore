@@ -145,10 +145,11 @@ ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-opus-4-8")
 # classification, so Haiku ($1/$5 per MTok vs $5/$25) is plenty.
 MATCH_MODEL: str = os.getenv("MATCH_MODEL", "claude-haiku-4-5")
 
-# Cap on ambiguous pairs sent to Claude per run (token guardrail while
-# testing live; verdicts are disk-cached so reruns cost nothing).
-# Override via .env for a backlog-clearing run: MATCH_MAX_CLAUDE_PAIRS=1000
-MATCH_MAX_CLAUDE_PAIRS: int = int(os.getenv("MATCH_MAX_CLAUDE_PAIRS", "60"))
+# Cap on ambiguous pairs sent to Claude per run (runaway guardrail; verdicts
+# are disk-cached so reruns cost nothing). The full backlog is ~800 pairs ≈
+# 50 Haiku batches ≈ well under $0.10, so the default covers all of it.
+# Override via .env to throttle: MATCH_MAX_CLAUDE_PAIRS=60
+MATCH_MAX_CLAUDE_PAIRS: int = int(os.getenv("MATCH_MAX_CLAUDE_PAIRS", "1000"))
 
 # Seed for DummyScorer so leaderboard output is stable across reruns.
 RANDOM_SEED: int = 42

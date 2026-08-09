@@ -3,8 +3,9 @@
 Recon for the Candid hackathon (Sat 8/8/2026). Two public sources form the spine;
 we join them by entity resolution and infer each project's funnel stage.
 
-## Source 1 — ERCOT interconnection queue  ✅ already wired
-- Pulled live via `gridstatus.Ercot().get_interconnection_queue()` (see `src/ingest.py`).
+## Source 1 — ERCOT interconnection queue  ✅ wired
+- Pulled live via `gridstatus.Ercot().get_interconnection_queue()` — radar
+  records in `src/sources/ercot.py`; model-side queue fetch in `src/ingest.py`.
 - 1,797 rows × 35 cols. Fields we use: `Queue ID`, `Project Name`,
   `Interconnecting Entity`, `County`, `Generation Type`, `Capacity (MW)`,
   `Queue Date`, `Status`, `GIM Study Phase`, `IA Signed`,
@@ -54,11 +55,6 @@ coordinates; 102 are NEW APPLICATIONs (the early-stage signal).
 | `aiNaicsCd` / `aiNaicsDesc` | industry — filter to power gen (NAICS 2211xx) |
 | `aiIdNumber`, `reRegNumber` | permit # / RN###### (link back to source filing) |
 | `aiIssueToBeginDt` | date (timeline) |
-
-**First task tomorrow (≈20 min):** nail the POST body schema. Options:
-1. Reload the portal with a network capture, run a search, copy the request payload.
-2. Fallback with zero reverse-engineering: **TCEQ Central Registry** bulk
-   Excel/ascii download (regulated entities: name, county, coords).
 
 ## The join (the judged "hard part")
 - **Entity resolution:** ERCOT `Interconnecting Entity` ↔ TCEQ `aiIssueToName`,

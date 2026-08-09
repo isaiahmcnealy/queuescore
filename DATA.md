@@ -1,7 +1,8 @@
 # Data Reference
 
-Day-of reference for the two datasets QueueScore uses. Numbers below were pulled
-live on **2026-08-07** — refresh if the ERCOT queue or LBNL edition changes.
+Reference for the two datasets QueueScore uses (training vs live scoring).
+Numbers below were pulled live on **2026-08-07** — refresh if the ERCOT queue
+or LBNL edition changes.
 
 | | Training (labels) | Scoring (live) |
 |---|---|---|
@@ -89,7 +90,8 @@ See [config.py `TARGET_DEFINITION`](src/config.py).
 | Solar+Battery | ~11% |
 | Battery | ~11% |
 
-Use these (recomputed for ERCOT) to seed `BaselineScorer._TECH_RATE` day-of.
+These national rates are the sanity check for `scorer._TECH_RATE`, the
+non-ML fallback used only when the trained bundle in `models/` can't load.
 
 ### Gotchas
 - Unique key is **`q_id` + `entity`**, not `q_id` alone.
@@ -159,9 +161,12 @@ See [`features.LEAKAGE_BANNED_COLUMNS`](src/features.py).
 
 ---
 
-## Refresh checklist (day-of)
-- [ ] Re-download LBNL xlsx if a newer edition is out (check emp.lbl.gov/queues date).
-- [ ] Re-run the seed command to refresh the ERCOT snapshot.
-- [ ] Fill `config.LBNL_TO_MODEL` from the mapping table above (codebook is resolved).
-- [ ] Recompute `BaselineScorer._TECH_RATE` from ERCOT terminal outcomes.
-- [ ] Confirm target = `q_status == operational` over the terminal population.
+## Refreshing the data
+
+- Re-download the LBNL xlsx when a newer edition is out (check the
+  emp.lbl.gov/queues date), then retrain and re-export the `models/` bundle.
+- Re-run the seed command above (or the app's refresh pill) to refresh the
+  ERCOT/TCEQ snapshots.
+- `config.LBNL_TO_MODEL` holds the column mapping (matches the table above);
+  the training target is `q_status == operational` over the terminal
+  population, per `config.TARGET_DEFINITION`.

@@ -9,12 +9,13 @@ from src import config, resolve
 from src.sources import RECORD_COLUMNS
 
 
-def _record(source, source_id, company, project, county, lat=None, lon=None):
+def _record(source, source_id, company, project, county, lat=None, lon=None,
+            kind="Gas"):
     return {
         "source": source, "source_id": source_id, "project_name": project,
         "company": company, "county": county.title(), "county_key": county.upper(),
         "lat": lat, "lon": lon, "status": "Active", "stage_signal": "",
-        "capacity_mw": 100.0, "kind": "Gas", "record_date": pd.Timestamp("2024-01-01"),
+        "capacity_mw": 100.0, "kind": kind, "record_date": pd.Timestamp("2024-01-01"),
         "link_id": source_id,
     }
 
@@ -71,6 +72,36 @@ def test_auto_match_found_and_wolf_hollow_units_not_confused(records):
     pairs = set(zip(auto["ercot_id"], auto["tceq_id"]))
     assert ("E1", "T1") in pairs            # same company, punctuation differs
     assert ("E2", "T2") not in pairs        # unit II vs unit I must not auto-match
+
+
+def test_cross_county_rescue_for_orphan_gas_rows():
+    # E9 is gas in Ector; there is NO TCEQ record in Ector, but a
+    # near-identical name exists in Midland -> rescued, flagged, not auto.
+    # E8 is solar in the same spot -> not rescued (no air permit expected).
+    recs = pd.DataFrame(
+        [
+            _record("ercot", "E9", "Desert Power LLC", "Desert Power CC", "Ector"),
+            _record("ercot", "E8", "Sunny Solar LLC", "Sunny Solar", "Ector", kind="Solar"),
+            _record("tceq", "T9", "Desert Power LLC", "DESERT POWER PLANT", "Midland", 32.0, -102.1),
+        ],
+        columns=RECORD_COLUMNS,
+    )
+    cands = resolve.candidate_pairs(recs)
+    rescued = cands[(cands["ercot_id"] == "E9") & (cands["tceq_id"] == "T9")]
+    assert len(rescued) == 1
+    assert bool(rescued.iloc[0]["cross_county"])
+    assert not (cands["ercot_id"] == "E8").any()
+    # Even at score 1.0 a cross-county pair must go to Claude, never auto.
+    auto = cands[(cands["score"] >= resolve.AUTO_MATCH) & ~cands["cross_county"]]
+    assert not (auto["ercot_id"] == "E9").any()
+
+
+def test_candidates_carry_adjudication_signals(records):
+    cands = resolve.candidate_pairs(records)
+    assert {"ercot_mw", "tceq_mw", "ercot_year", "tceq_year"} <= set(cands.columns)
+    row = cands.iloc[0]
+    assert row["ercot_mw"] == pytest.approx(100.0)
+    assert row["ercot_year"] == "2024"
 
 
 def test_dry_run_adjudication_skips_api(records, monkeypatch):

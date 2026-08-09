@@ -64,6 +64,15 @@ _STATUS_FALLBACK = PALETTE["ink"]
 DETAIL_PANEL_HEIGHT = 920
 MAP_HEIGHT = 480
 
+# Team CTA (hero "Team" pill): the people behind QueueScore + the repo.
+# LinkedIn URLs are the public contact points shown to reviewers.
+REPO_URL = "https://github.com/isaiahmcnealy/queuescore"
+TEAM = [
+    {"name": "Isaiah McNealy", "linkedin": "https://www.linkedin.com/in/PASTE-ISAIAH"},
+    {"name": "Tyler Wooten", "linkedin": "https://www.linkedin.com/in/PASTE-TYLER"},
+    {"name": "Camille Little", "linkedin": "https://www.linkedin.com/in/PASTE-CAMILLE"},
+]
+
 _CSS = f"""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,550;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap');
@@ -491,6 +500,32 @@ _CSS = f"""
     color: {PALETTE['bg']} !important;
   }}
 
+  /* Team pill — popover chrome matched to the hero status pills. */
+  div[data-testid="stColumn"]:has(.qs-team-btn) [data-testid="stPopover"] {{
+    justify-content: flex-start;
+  }}
+  div[data-testid="stColumn"]:has(.qs-team-btn) [data-testid="stPopoverButton"] {{
+    height: 2rem !important;
+    min-height: 2rem !important;
+    max-height: 2rem !important;
+    padding: 0 0.85rem !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    border-radius: 999px !important;
+    background: {PALETTE['terracotta']} !important;
+    border: 1px solid {PALETTE['terracotta']} !important;
+    color: {PALETTE['ink']} !important;
+    white-space: nowrap !important;
+  }}
+  div[data-testid="stColumn"]:has(.qs-team-btn) [data-testid="stPopoverButton"]:hover {{
+    background: #B5765C !important;
+    border-color: #B5765C !important;
+    color: {PALETTE['bg']} !important;
+  }}
+  .qs-team-card p {{ margin: 0 0 0.35rem 0; }}
+  .qs-team-card a {{ color: {PALETTE['olive']}; font-weight: 600; }}
+
   [data-testid="stPopover"] {{ display: flex; justify-content: flex-end; }}
   [data-testid="stPopover"] > button {{
     padding: 0.2rem 0.45rem !important;
@@ -564,7 +599,7 @@ def _hero(n_records: int, n_links: int, stamps: str, stamps_help: str) -> bool:
         stitched_on = False
         st.session_state.stitched_only = False
 
-    brand, pills = st.columns([1.15, 1], gap="large", vertical_alignment="center")
+    brand, pills = st.columns([1, 1.15], gap="large", vertical_alignment="center")
     with brand:
         st.markdown(
             (
@@ -580,7 +615,7 @@ def _hero(n_records: int, n_links: int, stamps: str, stamps_help: str) -> bool:
     with pills:
         # One row of identical-height controls (buttons share the same chrome).
         st.markdown('<div class="qs-hero-actions"></div>', unsafe_allow_html=True)
-        c1, c2, c3, c4 = st.columns([0.85, 1.1, 1.15, 2.1], gap="small")
+        c1, c2, c3, c4, c5 = st.columns([0.85, 1.1, 1.15, 2.0, 1.15], gap="small")
         with c1:
             st.markdown('<div class="qs-live-btn"></div>', unsafe_allow_html=True)
             st.button("Live", key="pill_live", disabled=True)
@@ -611,6 +646,25 @@ def _hero(n_records: int, n_links: int, stamps: str, stamps_help: str) -> bool:
             ):
                 st.session_state._do_refresh = True
                 st.rerun()
+        with c5:
+            st.markdown('<div class="qs-team-btn"></div>', unsafe_allow_html=True)
+            with st.popover("Get in touch", help="Meet the developers behind QueueScore"):
+                links = "".join(
+                    f'<p><a href="{m["linkedin"]}" target="_blank">{html.escape(m["name"])}</a>'
+                    " · LinkedIn</p>"
+                    for m in TEAM
+                )
+                st.markdown(
+                    (
+                        '<div class="qs-team-card">'
+                        '<p style="font-weight:700;">Built by</p>'
+                        f"{links}"
+                        f'<p style="margin-top:0.55rem;"><a href="{REPO_URL}" '
+                        'target="_blank">Project repository</a> · GitHub</p>'
+                        "</div>"
+                    ),
+                    unsafe_allow_html=True,
+                )
 
     return bool(st.session_state.get("stitched_only", False))
 
@@ -1396,7 +1450,19 @@ def main() -> None:
                     '<p class="qs-rail-label">Ask</p>',
                     unsafe_allow_html=True,
                 )
-                if st.button("Generate brief", key="btn_origination_read"):
+                # Same show/hide pattern as "Why this score": the button
+                # generates once, then toggles visibility of the cached brief.
+                sid = str(row["source_id"])
+                brief = st.session_state.get("_origination_read")
+                brief_shown = st.session_state.get("_brief_shown") == sid
+                brief_label = (
+                    ("Hide brief" if brief_shown else "Show brief")
+                    if brief else "Generate brief"
+                )
+                if st.button(brief_label, key="btn_origination_read"):
+                    if brief:
+                        st.session_state._brief_shown = None if brief_shown else sid
+                        st.rerun()
                     # Context beyond the record itself: the company's other
                     # filings and county activity — all computed locally.
                     my_company = resolve.normalize_name(row["company"])
@@ -1425,7 +1491,12 @@ def main() -> None:
                             same_co.to_dict("records"),
                             county_ctx,
                         )
-                if st.session_state.get("_origination_read"):
+                    st.session_state._brief_shown = sid
+                    st.rerun()
+                if (
+                    st.session_state.get("_origination_read")
+                    and st.session_state.get("_brief_shown") == sid
+                ):
                     _render_verdict(st.session_state._origination_read)
 
                 with st.form("record_qa_form", clear_on_submit=False):

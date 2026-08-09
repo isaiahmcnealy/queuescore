@@ -12,19 +12,24 @@ pip install -r requirements.txt
 streamlit run src/app.py
 ```
 
-The app runs immediately — **no network, no API key**. It scores demo projects
-with `DummyScorer`, and all Anthropic calls are gated behind `DRY_RUN` (on by
-default in `src/config.py`).
+The first run pulls both live sources (ERCOT via gridstatus, TCEQ via their
+public API) and caches snapshots under `data/snapshots/` — after that the app
+runs **fully offline**. No API key is needed for the map, stitched links,
+stages, or model scores (the trained bundle in `models/` and the match table
+are committed); Claude-powered features skip gracefully without one.
+
+`./run.sh start|stop|restart|status|logs` wraps the same server on port 8501.
 
 Run the tests to confirm the install:
 
 ```bash
-pytest        # expect: 8 passed
+pytest        # expect: 29 passed
 ```
 
-## Optional: live explanations (day-of)
+## Anthropic API key (briefs, Q&A, match adjudication)
 
-The app only needs a key when `DRY_RUN=false` in `.env`.
+The Claude-powered features need a key (`DRY_RUN=true` in `.env` disables all
+Anthropic calls for fully offline work).
 
 ```bash
 cp .env.example .env      # then paste your real ANTHROPIC_API_KEY
@@ -40,29 +45,31 @@ Nothing auto-loads `.env` unless `python-dotenv` is installed (it is in
 Hosted on **arya** behind Cloudflare Tunnel at `queuescore.tech`. See
 [DEPLOY.md](DEPLOY.md) (systemd, self-hosted runner, DNS).
 
-## Optional: offline live-queue demo
+## Snapshots & refreshing data
 
-The "Pull live queue" button falls back to a cached snapshot when offline. Seed
-that cache once while you have network:
+Source snapshots seed automatically on the app's first run and refresh when
+you click the timestamp pill in the hero bar (each source falls back to its
+snapshot if the live pull fails). To seed the model-side ERCOT queue snapshot
+from the command line:
 
 ```bash
 python -c "from src.ingest import fetch_ercot_queue; print(fetch_ercot_queue().shape)"
 ```
 
-The snapshot lands in `data/snapshots/` (gitignored). After this, the button
-works with no network.
+## Training data (only needed to retrain the model)
 
-## Day-of: training data
-
-Download the LBNL **"Queued Up"** dataset (CC BY 4.0) and drop the xlsx into
-`data/raw/`. It is **not** in the repo — it's shared out-of-band. `data/raw/*.xlsx`
-is gitignored so it never gets committed.
+The trained model bundle is committed in `models/`, so normal runs need
+nothing extra. To retrain, download the LBNL **"Queued Up"** dataset
+(CC BY 4.0) and drop the xlsx into `data/raw/` — it is **not** in the repo
+(`data/raw/*.xlsx` is gitignored; shared out-of-band).
 
 ## What's safe in git
 
-Committed: source, `README.md`, `SETUP.md`, `DEPLOY.md`, `DATA.md`,
-`requirements.txt`, `.env.example`, `deploy/`, `scripts/`, workflows,
-`.gitkeep`s, `conftest.py`, `.gitignore`.
+Committed: source, docs, `requirements.txt`, `.env.example`, `deploy/`,
+`scripts/`, workflows, `conftest.py`, `.gitignore`, the trained model bundle
+(`models/`), and `data/snapshots/matches.parquet` (the cross-source match
+table — committed deliberately so stitched links work out of the box).
 
-Never committed (gitignored): `.env`, `data/raw/*.xlsx`, `data/snapshots/*.parquet`,
-`.venv/`, `.idea/`, `__pycache__/`.
+Never committed (gitignored): `.env`, `data/raw/*.xlsx`, all other
+`data/snapshots/` files (source parquets, verdict/brief caches), `.venv/`,
+`.idea/`, `__pycache__/`.
